@@ -53,6 +53,7 @@
             <th>Estado</th>
             <th>UF</th>
             <th>Cód. País</th>
+            <th>País</th>
             <th>Ações</th>
         </tr>
     </thead>
@@ -64,6 +65,7 @@
                 <td>@estado.Estado</td>
                 <td>@estado.UF</td>
                 <td>@estado.CodPais</td>
+                <td>@estado.oPais.Pais</td>
                 <td>
                     <button class="btn btn-sm btn-warning" @onclick="() => Editar(estado)">Editar</button>
                     <button class="btn btn-sm btn-danger" @onclick="() => Excluir(estado.CodEstado)">Excluir</button>

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ProjetoSalaoDeBeleza.Data;
@@ -11,9 +12,11 @@ using ProjetoSalaoDeBeleza.Data;
 namespace ProjetoSalaoDeBeleza.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260513010415_AdicionaMaxLength")]
+    partial class AdicionaMaxLength
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -327,113 +330,6 @@ namespace ProjetoSalaoDeBeleza.Migrations
                     b.ToTable("Paises");
                 });
 
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Pessoas", b =>
-                {
-                    b.Property<int>("CodPessoa")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CodPessoa"));
-
-                    b.Property<bool>("Ativo")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("CPF")
-                        .IsRequired()
-                        .HasMaxLength(11)
-                        .HasColumnType("character varying(11)");
-
-                    b.Property<int>("CodCidade")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("DataCadastro")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("DataNascimento")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(13)
-                        .HasColumnType("character varying(13)");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("Nome")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Telefone")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("character varying(15)");
-
-                    b.Property<int>("oCidadeCodCidade")
-                        .HasColumnType("integer");
-
-                    b.HasKey("CodPessoa");
-
-                    b.HasIndex("oCidadeCodCidade");
-
-                    b.ToTable("Pessoas");
-
-                    b.HasDiscriminator<string>("Discriminator").HasValue("Pessoas");
-
-                    b.UseTphMappingStrategy();
-                });
-
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Clientes", b =>
-                {
-                    b.HasBaseType("ProjetoSalaoDeBeleza.Models.Pessoas");
-
-                    b.Property<string>("Observacoes")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<bool>("RecebeNotificacoes")
-                        .HasColumnType("boolean");
-
-                    b.Property<decimal>("TotalGasto")
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<int>("TotalVisitas")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("UltimaVisita")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasDiscriminator().HasValue("Clientes");
-                });
-
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Funcionarios", b =>
-                {
-                    b.HasBaseType("ProjetoSalaoDeBeleza.Models.Pessoas");
-
-                    b.Property<string>("Cargo")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
-
-                    b.Property<decimal>("ComissaoPercentual")
-                        .HasColumnType("numeric");
-
-                    b.Property<DateTime>("DataAdmissao")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DataDemissao")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("Salario")
-                        .HasColumnType("decimal(10,2)");
-
-                    b.HasDiscriminator().HasValue("Funcionarios");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -556,17 +452,6 @@ namespace ProjetoSalaoDeBeleza.Migrations
                         .IsRequired();
 
                     b.Navigation("oPais");
-                });
-
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Pessoas", b =>
-                {
-                    b.HasOne("ProjetoSalaoDeBeleza.Models.Cidades", "oCidade")
-                        .WithMany()
-                        .HasForeignKey("oCidadeCodCidade")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("oCidade");
                 });
 #pragma warning restore 612, 618
         }

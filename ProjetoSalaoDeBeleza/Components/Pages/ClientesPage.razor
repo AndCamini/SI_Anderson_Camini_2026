@@ -1,0 +1,152 @@
+﻿@page "/clientes"
+@rendermode InteractiveServer
+@using ProjetoSalaoDeBeleza.Models
+@using ProjetoSalaoDeBeleza.Services
+@inject ClientesService clientesService
+
+<h3>Cadastro de Clientes</h3>
+
+<EditForm Model="@clienteAtual" OnValidSubmit="Salvar" FormName="formClientes">
+    <div class="mb-2">
+        <label>Nome:</label>
+        <InputText @bind-Value="clienteAtual.Nome" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>CPF:</label>
+        <InputText @bind-Value="clienteAtual.CPF" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Email:</label>
+        <InputText @bind-Value="clienteAtual.Email" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Telefone:</label>
+        <InputText @bind-Value="clienteAtual.Telefone" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Data de Nascimento:</label>
+        <InputDate @bind-Value="clienteAtual.DataNascimento" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Cidade:</label>
+        <InputNumber @bind-Value="clienteAtual.CodCidade" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Observações:</label>
+        <InputTextArea @bind-Value="clienteAtual.Observacoes" class="form-control" />
+    </div>
+    <div class="mb-2 form-check">
+        <InputCheckbox @bind-Value="clienteAtual.RecebeNotificacoes" class="form-check-input" />
+        <label class="form-check-label">Recebe Notificações</label>
+    </div>
+    <div class="mb-2 form-check">
+        <InputCheckbox @bind-Value="clienteAtual.Ativo" class="form-check-input" />
+        <label class="form-check-label">Ativo</label>
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Salvar</button>
+    <button type="button" class="btn btn-secondary mt-2" @onclick="Cancelar">Cancelar</button>
+</EditForm>
+
+<hr />
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Cód</th>
+            <th>Nome</th>
+            <th>CPF</th>
+            <th>Email</th>
+            <th>Telefone</th>
+            <th>Data Nascimento</th>
+            <th>Cidade</th>
+            <th>Observações</th>
+            <th>Notificações</th>
+            <th>Ativo</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in listaClientes)
+        {
+            <tr>
+                <td>@c.CodPessoa</td>
+                <td>@c.Nome</td>
+                <td>@c.CPF</td>
+                <td>@c.Email</td>
+                <td>@c.Telefone</td>
+                <td>@c.DataNascimento.ToString("dd/MM/yyyy")</td>
+                <td>@c.oCidade?.Cidade</td>
+                <td>@c.Observacoes</td>
+                <td>@(c.RecebeNotificacoes ? "Sim" : "Não")</td>
+                <td>@(c.Ativo ? "Sim" : "Não")</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" @onclick="() => Editar(c)">Editar</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => Excluir(c.CodPessoa)">Excluir</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Clientes> listaClientes = new();
+
+    [SupplyParameterFromForm]
+    private Clientes clienteAtual { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarClientes();
+    }
+
+    private async Task CarregarClientes()
+    {
+        listaClientes = await clientesService.GetClientesAsync();
+    }
+
+    private async Task Salvar()
+    {
+        if (clienteAtual.CodPessoa == 0)
+        {
+            await clientesService.AddClienteAsync(clienteAtual);
+        }
+        else
+        {
+            await clientesService.UpdateClienteAsync(clienteAtual);
+        }
+        clienteAtual = new Clientes();
+        await CarregarClientes();
+    }
+
+    private void Editar(Clientes c)
+    {
+        clienteAtual = new Clientes
+        {
+            CodPessoa = c.CodPessoa,
+            Nome = c.Nome,
+            CPF = c.CPF,
+            Email = c.Email,
+            Telefone = c.Telefone,
+            DataNascimento = c.DataNascimento,
+            DataCadastro = c.DataCadastro,
+            Ativo = c.Ativo,
+            CodCidade = c.CodCidade,
+            TotalVisitas = c.TotalVisitas,
+            TotalGasto = c.TotalGasto,
+            Observacoes = c.Observacoes,
+            UltimaVisita = c.UltimaVisita,
+            RecebeNotificacoes = c.RecebeNotificacoes
+        };
+    }
+
+    private async Task Excluir(int id)
+    {
+        await clientesService.DeleteClienteAsync(id);
+        await CarregarClientes();
+    }
+
+    private void Cancelar()
+    {
+        clienteAtual = new Clientes();
+    }
+}
