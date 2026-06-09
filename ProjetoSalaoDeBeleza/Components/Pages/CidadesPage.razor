@@ -48,6 +48,8 @@
             <th>ID</th>
             <th>Cidade</th>
             <th>Cód. Estado</th>
+            <th>Estado</th>
+            <th>País</th>
             <th>Ações</th>
         </tr>
     </thead>
@@ -58,6 +60,8 @@
                 <td>@cidade.CodCidade</td>
                 <td>@cidade.Cidade</td>
                 <td>@cidade.CodEstado</td>
+                <td>@cidade.oEstado.Estado</td>
+                <td>@cidade.oEstado.oPais.Pais</td>
                 <td>
                     <button class="btn btn-sm btn-warning" @onclick="() => Editar(cidade)">Editar</button>
                     <button class="btn btn-sm btn-danger" @onclick="() => Excluir(cidade.CodCidade)">Excluir</button>
