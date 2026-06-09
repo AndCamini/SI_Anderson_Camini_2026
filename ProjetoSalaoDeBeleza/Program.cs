@@ -42,6 +42,9 @@ builder.Services.AddScoped<EstadosService>();
 builder.Services.AddScoped<CidadesService>();
 builder.Services.AddScoped<ClientesService>();
 builder.Services.AddScoped<FuncionariosService>();
+builder.Services.AddScoped<CondicaoPagamentoService>();
+
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var app = builder.Build();
 

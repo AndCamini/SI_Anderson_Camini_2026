@@ -11,10 +11,10 @@ namespace ProjetoSalaoDeBeleza.Models
         public decimal TotalGasto { get; set; } = 0;
 
         [MaxLength(500)]
-        public string Observacoes { get; set; }
+        public string? Observacoes { get; set; }
 
         public DateTime? UltimaVisita { get; set; }
 
-        public bool RecebeNotificacoes { get; set; } = true; 
+        public bool RecebeNotificacoes { get; set; } = true;
     }
 }

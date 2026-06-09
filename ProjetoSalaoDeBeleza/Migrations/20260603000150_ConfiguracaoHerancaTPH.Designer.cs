@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ProjetoSalaoDeBeleza.Data;
@@ -11,9 +12,11 @@ using ProjetoSalaoDeBeleza.Data;
 namespace ProjetoSalaoDeBeleza.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260603000150_ConfiguracaoHerancaTPH")]
+    partial class ConfiguracaoHerancaTPH
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -262,75 +265,6 @@ namespace ProjetoSalaoDeBeleza.Migrations
                     b.HasIndex("CodEstado");
 
                     b.ToTable("Cidades");
-                });
-
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.CondicaoPagamento", b =>
-                {
-                    b.Property<int>("CodCondicao")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CodCondicao"));
-
-                    b.Property<bool>("Ativo")
-                        .HasColumnType("boolean");
-
-                    b.Property<decimal>("Desconto")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<string>("Descricao")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<int>("EntreParcelas")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Juros")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<decimal>("Multa")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<int>("NumeroParcelas")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("PrimeiraParcela")
-                        .HasColumnType("integer");
-
-                    b.HasKey("CodCondicao");
-
-                    b.ToTable("CondicoesPagamento");
-                });
-
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.CondicaoPagamentoParcela", b =>
-                {
-                    b.Property<int>("CodParcela")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CodParcela"));
-
-                    b.Property<int>("CodCondicao")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Dias")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Numero")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Percentual")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<int>("oCondicaoCodCondicao")
-                        .HasColumnType("integer");
-
-                    b.HasKey("CodParcela");
-
-                    b.HasIndex("oCondicaoCodCondicao");
-
-                    b.ToTable("CondicoesPagamentoParcelas");
                 });
 
             modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Estados", b =>
@@ -611,17 +545,6 @@ namespace ProjetoSalaoDeBeleza.Migrations
                     b.Navigation("oEstado");
                 });
 
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.CondicaoPagamentoParcela", b =>
-                {
-                    b.HasOne("ProjetoSalaoDeBeleza.Models.CondicaoPagamento", "oCondicao")
-                        .WithMany("Parcelas")
-                        .HasForeignKey("oCondicaoCodCondicao")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("oCondicao");
-                });
-
             modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Estados", b =>
                 {
                     b.HasOne("ProjetoSalaoDeBeleza.Models.Paises", "oPais")
@@ -642,11 +565,6 @@ namespace ProjetoSalaoDeBeleza.Migrations
                         .IsRequired();
 
                     b.Navigation("oCidade");
-                });
-
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.CondicaoPagamento", b =>
-                {
-                    b.Navigation("Parcelas");
                 });
 #pragma warning restore 612, 618
         }

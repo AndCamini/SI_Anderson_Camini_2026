@@ -91,7 +91,7 @@
 @code {
     private List<Clientes> listaClientes = new();
 
-    [SupplyParameterFromForm]
+    [SupplyParameterFromForm(FormName = "formClientes")]
     private Clientes clienteAtual { get; set; } = new();
 
     protected override async Task OnInitializedAsync()

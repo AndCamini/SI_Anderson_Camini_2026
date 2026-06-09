@@ -13,7 +13,10 @@ namespace ProjetoSalaoDeBeleza.Services
             _dbContext = dbContext;
         }
 
-        public async Task<List<Funcionarios>> GetFuncionariosAsync() => await _dbContext.Funcionarios.ToListAsync();
+        public async Task<List<Funcionarios>> GetFuncionariosAsync() =>
+            await _dbContext.Funcionarios
+                .Include(f => f.oCidade)
+                .ToListAsync();
         public async Task<Funcionarios> GetFuncionarioByIdAsync(int id) => await _dbContext.Funcionarios.FindAsync(id);
         public async Task AddFuncionarioAsync(Funcionarios funcionario)
         {
@@ -22,7 +25,10 @@ namespace ProjetoSalaoDeBeleza.Services
         }
         public async Task UpdateFuncionarioAsync(Funcionarios funcionario)
         {
-            _dbContext.Funcionarios.Update(funcionario);
+            var existente = await _dbContext.Funcionarios.FindAsync(funcionario.CodPessoa);
+            if (existente == null) throw new Exception("Funcionário não encontrado.");
+
+            _dbContext.Entry(existente).CurrentValues.SetValues(funcionario);
             await _dbContext.SaveChangesAsync();
         }
         public async Task DeleteFuncionarioAsync(int id)

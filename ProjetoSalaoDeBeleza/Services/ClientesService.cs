@@ -31,7 +31,10 @@ namespace ProjetoSalaoDeBeleza.Services
 
         public async Task UpdateClienteAsync(Clientes cliente)
         {
-            _context.Clientes.Update(cliente);
+            var existente = await _context.Clientes.FindAsync(cliente.CodPessoa);
+            if (existente == null) throw new Exception("Cliente não encontrado.");
+
+            _context.Entry(existente).CurrentValues.SetValues(cliente);
             await _context.SaveChangesAsync();
         }
 
