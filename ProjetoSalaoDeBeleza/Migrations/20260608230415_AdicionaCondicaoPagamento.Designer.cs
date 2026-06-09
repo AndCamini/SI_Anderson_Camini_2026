@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ProjetoSalaoDeBeleza.Data;
@@ -11,9 +12,11 @@ using ProjetoSalaoDeBeleza.Data;
 namespace ProjetoSalaoDeBeleza.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260608230415_AdicionaCondicaoPagamento")]
+    partial class AdicionaCondicaoPagamento
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -244,13 +247,15 @@ namespace ProjetoSalaoDeBeleza.Migrations
                 {
                     b.Property<int>("CodCidade")
                         .ValueGeneratedOnAdd()
+                        .HasMaxLength(5)
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CodCidade"));
 
                     b.Property<string>("Cidade")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(85)
+                        .HasColumnType("character varying(85)");
 
                     b.Property<int>("CodEstado")
                         .HasColumnType("integer");
@@ -281,60 +286,25 @@ namespace ProjetoSalaoDeBeleza.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<int>("EntreParcelas")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Juros")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<decimal>("Multa")
-                        .HasColumnType("decimal(5,2)");
-
                     b.Property<int>("NumeroParcelas")
                         .HasColumnType("integer");
 
-                    b.Property<int>("PrimeiraParcela")
+                    b.Property<int>("PrazoDias")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("TaxaJuros")
+                        .HasColumnType("decimal(5,2)");
 
                     b.HasKey("CodCondicao");
 
                     b.ToTable("CondicoesPagamento");
                 });
 
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.CondicaoPagamentoParcela", b =>
-                {
-                    b.Property<int>("CodParcela")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CodParcela"));
-
-                    b.Property<int>("CodCondicao")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Dias")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Numero")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Percentual")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<int>("oCondicaoCodCondicao")
-                        .HasColumnType("integer");
-
-                    b.HasKey("CodParcela");
-
-                    b.HasIndex("oCondicaoCodCondicao");
-
-                    b.ToTable("CondicoesPagamentoParcelas");
-                });
-
             modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Estados", b =>
                 {
                     b.Property<int>("CodEstado")
                         .ValueGeneratedOnAdd()
+                        .HasMaxLength(5)
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CodEstado"));
@@ -344,11 +314,13 @@ namespace ProjetoSalaoDeBeleza.Migrations
 
                     b.Property<string>("Estado")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)");
 
                     b.Property<string>("UF")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
 
                     b.HasKey("CodEstado");
 
@@ -361,25 +333,30 @@ namespace ProjetoSalaoDeBeleza.Migrations
                 {
                     b.Property<int>("CodPais")
                         .ValueGeneratedOnAdd()
+                        .HasMaxLength(5)
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CodPais"));
 
                     b.Property<string>("DDI")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
 
                     b.Property<string>("Moeda")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)");
 
                     b.Property<string>("Pais")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)");
 
                     b.Property<string>("Sigla")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
 
                     b.HasKey("CodPais");
 
@@ -601,17 +578,6 @@ namespace ProjetoSalaoDeBeleza.Migrations
                     b.Navigation("oEstado");
                 });
 
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.CondicaoPagamentoParcela", b =>
-                {
-                    b.HasOne("ProjetoSalaoDeBeleza.Models.CondicaoPagamento", "oCondicao")
-                        .WithMany("Parcelas")
-                        .HasForeignKey("oCondicaoCodCondicao")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("oCondicao");
-                });
-
             modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Estados", b =>
                 {
                     b.HasOne("ProjetoSalaoDeBeleza.Models.Paises", "oPais")
@@ -632,11 +598,6 @@ namespace ProjetoSalaoDeBeleza.Migrations
                         .IsRequired();
 
                     b.Navigation("oCidade");
-                });
-
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.CondicaoPagamento", b =>
-                {
-                    b.Navigation("Parcelas");
                 });
 #pragma warning restore 612, 618
         }

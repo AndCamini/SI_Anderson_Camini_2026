@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ProjetoSalaoDeBeleza.Data;
@@ -11,9 +12,11 @@ using ProjetoSalaoDeBeleza.Data;
 namespace ProjetoSalaoDeBeleza.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260608233149_AddCondicaoPagamento")]
+    partial class AddCondicaoPagamento
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -244,13 +247,15 @@ namespace ProjetoSalaoDeBeleza.Migrations
                 {
                     b.Property<int>("CodCidade")
                         .ValueGeneratedOnAdd()
+                        .HasMaxLength(5)
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CodCidade"));
 
                     b.Property<string>("Cidade")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(85)
+                        .HasColumnType("character varying(85)");
 
                     b.Property<int>("CodEstado")
                         .HasColumnType("integer");
@@ -335,6 +340,7 @@ namespace ProjetoSalaoDeBeleza.Migrations
                 {
                     b.Property<int>("CodEstado")
                         .ValueGeneratedOnAdd()
+                        .HasMaxLength(5)
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CodEstado"));
@@ -344,11 +350,13 @@ namespace ProjetoSalaoDeBeleza.Migrations
 
                     b.Property<string>("Estado")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)");
 
                     b.Property<string>("UF")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
 
                     b.HasKey("CodEstado");
 
@@ -361,25 +369,30 @@ namespace ProjetoSalaoDeBeleza.Migrations
                 {
                     b.Property<int>("CodPais")
                         .ValueGeneratedOnAdd()
+                        .HasMaxLength(5)
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CodPais"));
 
                     b.Property<string>("DDI")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
 
                     b.Property<string>("Moeda")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)");
 
                     b.Property<string>("Pais")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)");
 
                     b.Property<string>("Sigla")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
 
                     b.HasKey("CodPais");
 

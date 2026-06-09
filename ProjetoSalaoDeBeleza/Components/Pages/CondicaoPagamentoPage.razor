@@ -1,0 +1,214 @@
+﻿@page "/condicoes-pagamento"
+@rendermode InteractiveServer
+@using ProjetoSalaoDeBeleza.Models
+@using ProjetoSalaoDeBeleza.Services
+@inject CondicaoPagamentoService condicaoPagamentoService
+
+<h3>Condições de Pagamento</h3>
+
+<EditForm Model="@condicaoAtual" OnValidSubmit="Salvar" FormName="formCondicaoPagamento">
+    <DataAnnotationsValidator />
+
+    <div class="mb-2">
+        <label>Descrição:</label>
+        <InputText @bind-Value="condicaoAtual.Descricao" class="form-control" />
+    </div>
+    <div class="row">
+        <div class="col mb-2">
+            <label>Nº de Parcelas:</label>
+            <InputNumber @bind-Value="condicaoAtual.NumeroParcelas" class="form-control" />
+        </div>
+        <div class="col mb-2">
+            <label>1ª Parcela (dias):</label>
+            <InputNumber @bind-Value="condicaoAtual.PrimeiraParcela" class="form-control" />
+        </div>
+        <div class="col mb-2">
+            <label>Entre Parcelas (dias):</label>
+            <InputNumber @bind-Value="condicaoAtual.EntreParcelas" class="form-control" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col mb-2">
+            <label>Juros (%):</label>
+            <InputNumber @bind-Value="condicaoAtual.Juros" class="form-control" />
+        </div>
+        <div class="col mb-2">
+            <label>Multa (%):</label>
+            <InputNumber @bind-Value="condicaoAtual.Multa" class="form-control" />
+        </div>
+        <div class="col mb-2">
+            <label>Desconto (%):</label>
+            <InputNumber @bind-Value="condicaoAtual.Desconto" class="form-control" />
+        </div>
+    </div>
+
+    <hr />
+    <h5>Parcelas</h5>
+
+    @{
+        var total = condicaoAtual.Parcelas.Sum(p => p.Percentual);
+        var totalClass = total == 100 ? "text-success" : "text-danger";
+    }
+
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Nº</th>
+                <th>Dias</th>
+                <th>% Parcela</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var parcela in condicaoAtual.Parcelas)
+            {
+                <tr>
+                    <td>@parcela.Numero</td>
+                    <td>
+                        <InputNumber @bind-Value="parcela.Dias" class="form-control form-control-sm" />
+                    </td>
+                    <td>
+                        <InputNumber @bind-Value="parcela.Percentual" class="form-control form-control-sm" />
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm"
+                                @onclick="() => RemoverParcela(parcela)">
+                            🗑
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="AdicionarParcela">
+            + Adicionar parcela
+        </button>
+        <span class="@totalClass fw-bold">Total: @total.ToString("F2")%</span>
+    </div>
+
+    <div class="mb-2 form-check">
+        <InputCheckbox @bind-Value="condicaoAtual.Ativo" class="form-check-input" />
+        <label class="form-check-label">Ativo</label>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-2">Salvar</button>
+    <button type="button" class="btn btn-secondary mt-2" @onclick="Cancelar">Cancelar</button>
+</EditForm>
+
+<hr />
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Cód</th>
+            <th>Descrição</th>
+            <th>Parcelas</th>
+            <th>Juros (%)</th>
+            <th>Multa (%)</th>
+            <th>Desconto (%)</th>
+            <th>Ativo</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in listaCondicoes)
+        {
+            <tr>
+                <td>@c.CodCondicao</td>
+                <td>@c.Descricao</td>
+                <td>@c.NumeroParcelas</td>
+                <td>@c.Juros.ToString("F2")</td>
+                <td>@c.Multa.ToString("F2")</td>
+                <td>@c.Desconto.ToString("F2")</td>
+                <td>@(c.Ativo ? "Sim" : "Não")</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" @onclick="() => Editar(c)">Editar</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => Excluir(c.CodCondicao)">Excluir</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<CondicaoPagamento> listaCondicoes = new();
+
+    [SupplyParameterFromForm(FormName = "formCondicaoPagamento")]
+    private CondicaoPagamento condicaoAtual { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarCondicoes();
+    }
+
+    private async Task CarregarCondicoes()
+    {
+        listaCondicoes = await condicaoPagamentoService.GetCondicoesPagamentoAsync();
+    }
+
+    private void AdicionarParcela()
+    {
+        condicaoAtual.Parcelas.Add(new CondicaoPagamentoParcela
+        {
+            Numero = condicaoAtual.Parcelas.Count + 1,
+            Dias = 0,
+            Percentual = 0
+        });
+    }
+
+    private void RemoverParcela(CondicaoPagamentoParcela parcela)
+    {
+        condicaoAtual.Parcelas.Remove(parcela);
+        // Renumera
+        for (int i = 0; i < condicaoAtual.Parcelas.Count; i++)
+            condicaoAtual.Parcelas[i].Numero = i + 1;
+    }
+
+    private async Task Salvar()
+    {
+        if (condicaoAtual.CodCondicao == 0)
+            await condicaoPagamentoService.AddCondicaoAsync(condicaoAtual);
+        else
+            await condicaoPagamentoService.UpdateCondicaoAsync(condicaoAtual);
+
+        condicaoAtual = new CondicaoPagamento();
+        await CarregarCondicoes();
+    }
+
+    private void Editar(CondicaoPagamento c)
+    {
+        condicaoAtual = new CondicaoPagamento
+        {
+            CodCondicao = c.CodCondicao,
+            Descricao = c.Descricao,
+            NumeroParcelas = c.NumeroParcelas,
+            PrimeiraParcela = c.PrimeiraParcela,
+            EntreParcelas = c.EntreParcelas,
+            Juros = c.Juros,
+            Multa = c.Multa,
+            Desconto = c.Desconto,
+            Ativo = c.Ativo,
+            Parcelas = c.Parcelas.Select(p => new CondicaoPagamentoParcela
+            {
+                CodParcela = p.CodParcela,
+                CodCondicao = p.CodCondicao,
+                Numero = p.Numero,
+                Dias = p.Dias,
+                Percentual = p.Percentual
+            }).ToList()
+        };
+    }
+
+    private async Task Excluir(int id)
+    {
+        await condicaoPagamentoService.DeleteCondicaoAsync(id);
+        await CarregarCondicoes();
+    }
+
+    private void Cancelar()
+    {
+        condicaoAtual = new CondicaoPagamento();
+    }
+}

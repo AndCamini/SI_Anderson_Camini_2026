@@ -1,0 +1,167 @@
+﻿@page "/funcionarios"
+@rendermode InteractiveServer
+@using ProjetoSalaoDeBeleza.Models
+@using ProjetoSalaoDeBeleza.Services
+@inject FuncionariosService funcionariosService
+
+<h3>Cadastro de Funcionarios</h3>
+
+<EditForm Model="@funcionarioAtual" OnValidSubmit="Salvar" FormName="formFuncionarios">
+    <div class="mb-2">
+        <label>Nome:</label>
+        <InputText @bind-Value="funcionarioAtual.Nome" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>CPF:</label>
+        <InputText @bind-Value="funcionarioAtual.CPF" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Email:</label>
+        <InputText @bind-Value="funcionarioAtual.Email" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Telefone:</label>
+        <InputText @bind-Value="funcionarioAtual.Telefone" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Data de Nascimento:</label>
+        <InputDate @bind-Value="funcionarioAtual.DataNascimento" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Cidade:</label>
+        <InputNumber @bind-Value="funcionarioAtual.CodCidade" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Cargo:</label>
+        <InputText @bind-Value="funcionarioAtual.Cargo" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Salário:</label>
+        <InputNumber @bind-Value="funcionarioAtual.Salario" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Data de Admissão:</label>
+        <InputDate @bind-Value="funcionarioAtual.DataAdmissao" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Data de Demissão:</label>
+        <InputDate @bind-Value="funcionarioAtual.DataDemissao" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Comissão Percentual:</label>
+        <InputNumber @bind-Value="funcionarioAtual.ComissaoPercentual" class="form-control" />
+    </div>
+    <div class="mb-2 form-check">
+        <InputCheckbox @bind-Value="funcionarioAtual.Ativo" class="form-check-input" />
+        <label class="form-check-label">Ativo</label>
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Salvar</button>
+    <button type="button" class="btn btn-secondary mt-2" @onclick="Cancelar">Cancelar</button>
+</EditForm>
+
+<hr />
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Cód</th>
+            <th>Nome</th>
+            <th>CPF</th>
+            <th>Email</th>
+            <th>Telefone</th>
+            <th>Data Nascimento</th>
+            <th>Cidade</th>
+            <th>Cargo</th>
+            <th>Salário</th>
+            <th>DataAdmissao</th>
+            <th>DataDemissao</th>
+            <th>ComissaoPercentual</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in listaFuncionarios)
+        {
+            <tr>
+                <td>@c.CodPessoa</td>
+                <td>@c.Nome</td>
+                <td>@c.CPF</td>
+                <td>@c.Email</td>
+                <td>@c.Telefone</td>
+                <td>@c.DataNascimento.ToString("dd/MM/yyyy")</td>
+                <td>@c.oCidade?.Cidade</td>
+                <td>@c.Cargo</td>
+                <td>@c.Salario</td>
+                <td>@c.DataAdmissao.ToString("dd/MM/yyyy")</td>
+                <td>@c.DataDemissao?.ToString("dd/MM/yyyy")</td>
+                <td>@c.ComissaoPercentual.ToString("P2")</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" @onclick="() => Editar(c)">Editar</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => Excluir(c.CodPessoa)">Excluir</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Funcionarios> listaFuncionarios = new();
+
+    [SupplyParameterFromForm]
+    private Funcionarios funcionarioAtual { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarFuncionarios();
+    }
+
+    private async Task CarregarFuncionarios()
+    {
+        listaFuncionarios = await funcionariosService.GetFuncionariosAsync();
+    }
+
+    private async Task Salvar()
+    {
+        if (funcionarioAtual.CodPessoa == 0)
+        {
+            await funcionariosService.AddFuncionarioAsync(funcionarioAtual);
+        }
+        else
+        {
+            await funcionariosService.UpdateFuncionarioAsync(funcionarioAtual);
+        }
+        funcionarioAtual = new Funcionarios();
+        await CarregarFuncionarios();
+    }
+
+    private void Editar(Funcionarios c)
+    {
+        funcionarioAtual = new Funcionarios
+        {
+            CodPessoa = c.CodPessoa,
+            Nome = c.Nome,
+            CPF = c.CPF,
+            Email = c.Email,
+            Telefone = c.Telefone,
+            DataNascimento = c.DataNascimento,
+            Cargo = c.Cargo,
+            Salario = c.Salario,
+            DataAdmissao = c.DataAdmissao,
+            DataDemissao = c.DataDemissao,
+            ComissaoPercentual = c.ComissaoPercentual,
+            Ativo = c.Ativo,
+            CodCidade = c.CodCidade,
+            
+        };
+    }
+
+    private async Task Excluir(int id)
+    {
+        await funcionariosService.DeleteFuncionarioAsync(id);
+        await CarregarFuncionarios();
+    }
+
+    private void Cancelar()
+    {
+        funcionarioAtual = new Funcionarios();
+    }
+}
