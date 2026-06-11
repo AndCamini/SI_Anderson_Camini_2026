@@ -85,7 +85,6 @@
                 </NavLink>
             </div>
         }
-
     </nav>
 </div>
 
@@ -107,14 +106,6 @@
     public void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
-    }
-
-    private bool collapseNavMenu = true;
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
     }
 
     private bool expandirLocalidade = false;

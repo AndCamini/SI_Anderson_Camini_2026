@@ -31,6 +31,10 @@
             <th>Cód</th>
             <th>Estado</th>
             <th>UF</th>
+<<<<<<< HEAD
+=======
+            <th>Cód. País</th>
+>>>>>>> ccb7f4c620f1dec90ee443987b614331aeedc2ba
             <th>País</th>
             <th>Ações</th>
         </tr>
@@ -39,10 +43,18 @@
         @foreach (var e in listaEstados)
         {
             <tr>
+<<<<<<< HEAD
                 <td>@e.CodEstado</td>
                 <td>@e.Estado</td>
                 <td>@e.UF</td>
                 <td>@listaPaises.FirstOrDefault(p => p.CodPais == e.CodPais)?.Pais</td>
+=======
+                <td>@estado.CodEstado</td>
+                <td>@estado.Estado</td>
+                <td>@estado.UF</td>
+                <td>@estado.CodPais</td>
+                <td>@estado.oPais.Pais</td>
+>>>>>>> ccb7f4c620f1dec90ee443987b614331aeedc2ba
                 <td>
                     <button class="btn btn-warning btn-sm" @onclick="() => AbrirModalEditar(e)">Editar</button>
                     <button class="btn btn-danger btn-sm" @onclick="() => Excluir(e.CodEstado)">Excluir</button>
