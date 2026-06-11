@@ -1,11 +1,11 @@
-﻿@page "/paises"
+﻿@page "/categorias"
 @rendermode InteractiveServer
 @using ProjetoSalaoDeBeleza.Models
 @using ProjetoSalaoDeBeleza.Services
-@inject PaisesService paisesService
+@inject CategoriasService categoriasService
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">Países</h3>
+    <h3 class="mb-0">Categorias</h3>
     <button class="btn btn-primary" @onclick="AbrirModalNovo">+ Cadastrar novo</button>
 </div>
 
@@ -28,25 +28,21 @@
     <thead class="table-dark">
         <tr>
             <th>Cód</th>
-            <th>País</th>
-            <th>Sigla</th>
-            <th>DDI</th>
-            <th>Moeda</th>
+            <th>Nome</th>
+            <th>Ativo</th>
             <th>Ações</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var p in listaPaises)
+        @foreach (var c in listaCategorias)
         {
             <tr>
-                <td>@p.CodPais</td>
-                <td>@p.Pais</td>
-                <td>@p.Sigla</td>
-                <td>@p.DDI</td>
-                <td>@p.Moeda</td>
+                <td>@c.CodCategoria</td>
+                <td>@c.Categoria</td>
+                <td>@(c.Ativo ? "Sim" : "Não")</td>
                 <td>
-                    <button class="btn btn-warning btn-sm" @onclick="() => AbrirModalEditar(p)">Editar</button>
-                    <button class="btn btn-danger btn-sm" @onclick="() => Excluir(p.CodPais)">Excluir</button>
+                    <button class="btn btn-warning btn-sm" @onclick="() => AbrirModalEditar(c)">Editar</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => Excluir(c.CodCategoria)">Excluir</button>
                 </td>
             </tr>
         }
@@ -59,10 +55,10 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">@(paisAtual.CodPais == 0 ? "Novo País" : "Editar País")</h5>
+                    <h5 class="modal-title">@(categoriaAtual.CodCategoria == 0 ? "Nova Categoria" : "Editar Categoria")</h5>
                     <button type="button" class="btn-close" @onclick="FecharModal"></button>
                 </div>
-                <EditForm Model="@paisAtual" OnValidSubmit="Salvar">
+                <EditForm Model="@categoriaAtual" OnValidSubmit="Salvar">
                     <DataAnnotationsValidator />
                     <div class="modal-body">
                         @if (!string.IsNullOrEmpty(mensagemErroModal))
@@ -70,26 +66,13 @@
                             <div class="alert alert-danger">@mensagemErroModal</div>
                         }
                         <div class="mb-3">
-                            <label class="form-label">País</label>
-                            <InputText @bind-Value="paisAtual.Pais" class="form-control" />
-                            <ValidationMessage For="@(() => paisAtual.Pais)" />
+                            <label class="form-label">Nome</label>
+                            <InputText @bind-Value="categoriaAtual.Categoria" class="form-control" />
+                            <ValidationMessage For="@(() => categoriaAtual.Categoria)" />
                         </div>
-                        <div class="row">
-                            <div class="col-4 mb-3">
-                                <label class="form-label">Sigla</label>
-                                <InputText @bind-Value="paisAtual.Sigla" class="form-control" maxlength="3" />
-                                <ValidationMessage For="@(() => paisAtual.Sigla)" />
-                            </div>
-                            <div class="col-4 mb-3">
-                                <label class="form-label">DDI</label>
-                                <InputText @bind-Value="paisAtual.DDI" class="form-control" maxlength="5" />
-                                <ValidationMessage For="@(() => paisAtual.DDI)" />
-                            </div>
-                            <div class="col-4 mb-3">
-                                <label class="form-label">Moeda</label>
-                                <InputText @bind-Value="paisAtual.Moeda" class="form-control" maxlength="10" />
-                                <ValidationMessage For="@(() => paisAtual.Moeda)" />
-                            </div>
+                        <div class="mb-3 form-check">
+                            <InputCheckbox @bind-Value="categoriaAtual.Ativo" class="form-check-input" id="ativoCheck" />
+                            <label class="form-check-label" for="ativoCheck">Ativo</label>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -103,8 +86,8 @@
 }
 
 @code {
-    private List<Paises> listaPaises = new();
-    private Paises paisAtual = new();
+    private List<Categorias> listaCategorias = new();
+    private Categorias categoriaAtual = new();
     private bool modalAberto = false;
     private string? mensagemErro;
     private string? mensagemSucesso;
@@ -112,30 +95,28 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await CarregarPaises();
+        await CarregarCategorias();
     }
 
-    private async Task CarregarPaises()
+    private async Task CarregarCategorias()
     {
-        listaPaises = await paisesService.GetPaisesAsync();
+        listaCategorias = await categoriasService.GetCategoriasAsync();
     }
 
     private void AbrirModalNovo()
     {
-        paisAtual = new Paises();
+        categoriaAtual = new Categorias();
         mensagemErroModal = null;
         modalAberto = true;
     }
 
-    private void AbrirModalEditar(Paises p)
+    private void AbrirModalEditar(Categorias c)
     {
-        paisAtual = new Paises
+        categoriaAtual = new Categorias
         {
-            CodPais = p.CodPais,
-            Pais = p.Pais,
-            Sigla = p.Sigla,
-            DDI = p.DDI,
-            Moeda = p.Moeda
+            CodCategoria = c.CodCategoria,
+            Categoria = c.Categoria,
+            Ativo = c.Ativo
         };
         mensagemErroModal = null;
         modalAberto = true;
@@ -144,7 +125,7 @@
     private void FecharModal()
     {
         modalAberto = false;
-        paisAtual = new Paises();
+        categoriaAtual = new Categorias();
         mensagemErroModal = null;
     }
 
@@ -153,14 +134,14 @@
         LimparMensagens();
         try
         {
-            if (paisAtual.CodPais == 0)
-                await paisesService.AddPaisAsync(paisAtual);
+            if (categoriaAtual.CodCategoria == 0)
+                await categoriasService.AddCategoriaAsync(categoriaAtual);
             else
-                await paisesService.UpdatePaisAsync(paisAtual);
+                await categoriasService.UpdateCategoriaAsync(categoriaAtual);
 
-            mensagemSucesso = "País salvo com sucesso.";
+            mensagemSucesso = "Categoria salva com sucesso.";
             FecharModal();
-            await CarregarPaises();
+            await CarregarCategorias();
         }
         catch (Exception ex)
         {
@@ -173,9 +154,9 @@
         LimparMensagens();
         try
         {
-            await paisesService.DeletePaisAsync(id);
-            mensagemSucesso = "País excluído com sucesso.";
-            await CarregarPaises();
+            await categoriasService.DeleteCategoriaAsync(id);
+            mensagemSucesso = "Categoria excluída com sucesso.";
+            await CarregarCategorias();
         }
         catch (Exception ex)
         {

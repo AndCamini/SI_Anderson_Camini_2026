@@ -6,39 +6,58 @@
 
 <h3>Condições de Pagamento</h3>
 
+@if (!string.IsNullOrEmpty(mensagemErro))
+{
+    <div class="alert alert-danger">@mensagemErro</div>
+}
+@if (!string.IsNullOrEmpty(mensagemSucesso))
+{
+    <div class="alert alert-success">@mensagemSucesso</div>
+}
+
 <EditForm Model="@condicaoAtual" OnValidSubmit="Salvar" FormName="formCondicaoPagamento">
     <DataAnnotationsValidator />
+    <ValidationSummary />
 
     <div class="mb-2">
         <label>Descrição:</label>
         <InputText @bind-Value="condicaoAtual.Descricao" class="form-control" />
+        <ValidationMessage For="@(() => condicaoAtual.Descricao)" />
     </div>
+
     <div class="row">
         <div class="col mb-2">
             <label>Nº de Parcelas:</label>
             <InputNumber @bind-Value="condicaoAtual.NumeroParcelas" class="form-control" />
+            <ValidationMessage For="@(() => condicaoAtual.NumeroParcelas)" />
         </div>
         <div class="col mb-2">
             <label>1ª Parcela (dias):</label>
             <InputNumber @bind-Value="condicaoAtual.PrimeiraParcela" class="form-control" />
+            <ValidationMessage For="@(() => condicaoAtual.PrimeiraParcela)" />
         </div>
         <div class="col mb-2">
             <label>Entre Parcelas (dias):</label>
             <InputNumber @bind-Value="condicaoAtual.EntreParcelas" class="form-control" />
+            <ValidationMessage For="@(() => condicaoAtual.EntreParcelas)" />
         </div>
     </div>
+
     <div class="row">
         <div class="col mb-2">
             <label>Juros (%):</label>
             <InputNumber @bind-Value="condicaoAtual.Juros" class="form-control" />
+            <ValidationMessage For="@(() => condicaoAtual.Juros)" />
         </div>
         <div class="col mb-2">
             <label>Multa (%):</label>
             <InputNumber @bind-Value="condicaoAtual.Multa" class="form-control" />
+            <ValidationMessage For="@(() => condicaoAtual.Multa)" />
         </div>
         <div class="col mb-2">
             <label>Desconto (%):</label>
             <InputNumber @bind-Value="condicaoAtual.Desconto" class="form-control" />
+            <ValidationMessage For="@(() => condicaoAtual.Desconto)" />
         </div>
     </div>
 
@@ -46,8 +65,16 @@
     <h5>Parcelas</h5>
 
     @{
-        var total = condicaoAtual.Parcelas.Sum(p => p.Percentual);
-        var totalClass = total == 100 ? "text-success" : "text-danger";
+        var totalPercentual = condicaoAtual.Parcelas.Sum(p => p.Percentual);
+        var totalClass = totalPercentual == 100 ? "text-success" : "text-danger";
+        var parcelasOk = condicaoAtual.Parcelas.Count == condicaoAtual.NumeroParcelas;
+    }
+
+    @if (condicaoAtual.Parcelas.Count > 0 && !parcelasOk)
+    {
+        <div class="alert alert-warning py-1">
+            Você informou @condicaoAtual.NumeroParcelas parcela(s), mas cadastrou @condicaoAtual.Parcelas.Count.
+        </div>
     }
 
     <table class="table table-sm">
@@ -62,13 +89,27 @@
         <tbody>
             @foreach (var parcela in condicaoAtual.Parcelas)
             {
+                var diasInvalidos = parcela.Dias < 0;
+                var percentualInvalido = parcela.Percentual <= 0;
+
                 <tr>
                     <td>@parcela.Numero</td>
                     <td>
-                        <InputNumber @bind-Value="parcela.Dias" class="form-control form-control-sm" />
+                        <InputNumber @bind-Value="parcela.Dias"
+                            class="@($"form-control form-control-sm {(diasInvalidos ? "is-invalid" : "")}")" />
+
+                        @if (diasInvalidos)
+                        {
+                            <div class="invalid-feedback">Dias não pode ser negativo.</div>
+                        }
                     </td>
                     <td>
-                        <InputNumber @bind-Value="parcela.Percentual" class="form-control form-control-sm" />
+                        <InputNumber @bind-Value="parcela.Percentual"
+                            class="@($"form-control form-control-sm {(percentualInvalido ? "is-invalid" : "")}")" />
+                        @if (percentualInvalido)
+                        {
+                            <div class="invalid-feedback">Percentual deve ser maior que 0%.</div>
+                        }
                     </td>
                     <td>
                         <button type="button" class="btn btn-danger btn-sm"
@@ -85,7 +126,17 @@
         <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="AdicionarParcela">
             + Adicionar parcela
         </button>
-        <span class="@totalClass fw-bold">Total: @total.ToString("F2")%</span>
+        <span class="@totalClass fw-bold">
+            Total: @totalPercentual.ToString("F2")%
+            @if (totalPercentual == 100)
+            {
+                <span> ✔</span>
+            }
+            else
+            {
+                <span> (faltam @((100 - totalPercentual).ToString("F2"))%)</span>
+            }
+        </span>
     </div>
 
     <div class="mb-2 form-check">
@@ -134,6 +185,8 @@
 
 @code {
     private List<CondicaoPagamento> listaCondicoes = new();
+    private string? mensagemErro;
+    private string? mensagemSucesso;
 
     [SupplyParameterFromForm(FormName = "formCondicaoPagamento")]
     private CondicaoPagamento condicaoAtual { get; set; } = new();
@@ -156,29 +209,40 @@
             Dias = 0,
             Percentual = 0
         });
+        LimparMensagens();
     }
 
     private void RemoverParcela(CondicaoPagamentoParcela parcela)
     {
         condicaoAtual.Parcelas.Remove(parcela);
-        // Renumera
         for (int i = 0; i < condicaoAtual.Parcelas.Count; i++)
             condicaoAtual.Parcelas[i].Numero = i + 1;
+        LimparMensagens();
     }
 
     private async Task Salvar()
     {
-        if (condicaoAtual.CodCondicao == 0)
-            await condicaoPagamentoService.AddCondicaoAsync(condicaoAtual);
-        else
-            await condicaoPagamentoService.UpdateCondicaoAsync(condicaoAtual);
+        LimparMensagens();
+        try
+        {
+            if (condicaoAtual.CodCondicao == 0)
+                await condicaoPagamentoService.AddCondicaoAsync(condicaoAtual);
+            else
+                await condicaoPagamentoService.UpdateCondicaoAsync(condicaoAtual);
 
-        condicaoAtual = new CondicaoPagamento();
-        await CarregarCondicoes();
+            mensagemSucesso = "Condição de pagamento salva com sucesso.";
+            condicaoAtual = new CondicaoPagamento();
+            await CarregarCondicoes();
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = ex.Message;
+        }
     }
 
     private void Editar(CondicaoPagamento c)
     {
+        LimparMensagens();
         condicaoAtual = new CondicaoPagamento
         {
             CodCondicao = c.CodCondicao,
@@ -203,12 +267,28 @@
 
     private async Task Excluir(int id)
     {
-        await condicaoPagamentoService.DeleteCondicaoAsync(id);
-        await CarregarCondicoes();
+        LimparMensagens();
+        try
+        {
+            await condicaoPagamentoService.DeleteCondicaoAsync(id);
+            mensagemSucesso = "Condição de pagamento excluída com sucesso.";
+            await CarregarCondicoes();
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = ex.Message;
+        }
     }
 
     private void Cancelar()
     {
         condicaoAtual = new CondicaoPagamento();
+        LimparMensagens();
+    }
+
+    private void LimparMensagens()
+    {
+        mensagemErro = null;
+        mensagemSucesso = null;
     }
 }
