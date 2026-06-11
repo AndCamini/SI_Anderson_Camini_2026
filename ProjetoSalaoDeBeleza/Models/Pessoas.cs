@@ -23,3 +23,4 @@
             public int CodCidade { get; set; }
         }
     }
+// adicionar endereço completo (não só a cidade)

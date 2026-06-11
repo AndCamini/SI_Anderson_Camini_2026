@@ -2,77 +2,105 @@
 @rendermode InteractiveServer
 @using ProjetoSalaoDeBeleza.Models
 @using ProjetoSalaoDeBeleza.Services
-@inject EstadosService estadosService
 @inject CidadesService cidadesService
-@inject NavigationManager Navigation
+@inject EstadosService estadosService
 
-<h3>Cadastro de Cidades</h3>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Cidades</h3>
+    <button class="btn btn-primary" @onclick="AbrirModalNovo">+ Cadastrar novo</button>
+</div>
 
-<EditForm Model="@cidadeAtual" OnValidSubmit="Salvar" FormName="formCidades">
-    <DataAnnotationsValidator />
-
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <label class="form-label">Nome da Cidade</label>
-            <InputText @bind-Value="cidadeAtual.Cidade" class="form-control" />
-        </div>
-
-        <div class="col-md-6 mb-3 d-flex align-items-end">
-            <div class="flex-grow-1 me-2">
-                <label class="form-label">Estado</label>
-                <InputSelect @bind-Value="cidadeAtual.CodEstado" class="form-select">
-                    <option value="0">Selecione um estado...</option>
-                    @foreach (var estado in listaEstados)
-                    {
-                        <option value="@estado.CodEstado">@estado.Estado - @estado.UF</option>
-                    }
-                </InputSelect>
-            </div>
-            <div>
-                <button type="button" class="btn btn-outline-secondary" @onclick='() => Navigation.NavigateTo("/estados")' title="Cadastrar Novo Estado">
-                    + Novo
-                </button>
-            </div>
-        </div>
+@if (!string.IsNullOrEmpty(mensagemErro))
+{
+    <div class="alert alert-danger alert-dismissible">
+        @mensagemErro
+        <button type="button" class="btn-close" @onclick="LimparMensagens"></button>
     </div>
+}
+@if (!string.IsNullOrEmpty(mensagemSucesso))
+{
+    <div class="alert alert-success alert-dismissible">
+        @mensagemSucesso
+        <button type="button" class="btn-close" @onclick="LimparMensagens"></button>
+    </div>
+}
 
-    <button type="submit" class="btn btn-primary">Salvar</button>
-    <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
-</EditForm>
-
-<hr />
-
-<table class="table table-striped">
-    <thead>
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
         <tr>
-            <th>ID</th>
+            <th>Cód</th>
             <th>Cidade</th>
-            <th>Cód. Estado</th>
+            <th>Estado</th>
             <th>Ações</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var cidade in listaCidades)
+        @foreach (var c in listaCidades)
         {
             <tr>
-                <td>@cidade.CodCidade</td>
-                <td>@cidade.Cidade</td>
-                <td>@cidade.CodEstado</td>
+                <td>@c.CodCidade</td>
+                <td>@c.Cidade</td>
+                <td>@listaEstados.FirstOrDefault(e => e.CodEstado == c.CodEstado)?.Estado</td>
                 <td>
-                    <button class="btn btn-sm btn-warning" @onclick="() => Editar(cidade)">Editar</button>
-                    <button class="btn btn-sm btn-danger" @onclick="() => Excluir(cidade.CodCidade)">Excluir</button>
+                    <button class="btn btn-warning btn-sm" @onclick="() => AbrirModalEditar(c)">Editar</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => Excluir(c.CodCidade)">Excluir</button>
                 </td>
             </tr>
         }
     </tbody>
 </table>
 
+@if (modalAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(cidadeAtual.CodCidade == 0 ? "Nova Cidade" : "Editar Cidade")</h5>
+                    <button type="button" class="btn-close" @onclick="FecharModal"></button>
+                </div>
+                <EditForm Model="@cidadeAtual" OnValidSubmit="Salvar">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        @if (!string.IsNullOrEmpty(mensagemErroModal))
+                        {
+                            <div class="alert alert-danger">@mensagemErroModal</div>
+                        }
+                        <div class="mb-3">
+                            <label class="form-label">Cidade</label>
+                            <InputText @bind-Value="cidadeAtual.Cidade" class="form-control" />
+                            <ValidationMessage For="@(() => cidadeAtual.Cidade)" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Estado</label>
+                            <InputSelect @bind-Value="cidadeAtual.CodEstado" class="form-select">
+                                <option value="0">Selecione...</option>
+                                @foreach (var estado in listaEstados)
+                                {
+                                    <option value="@estado.CodEstado">@estado.Estado - @estado.UF</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => cidadeAtual.CodEstado)" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<Cidades> listaCidades = new();
     private List<Estados> listaEstados = new();
-
-    [SupplyParameterFromForm]
-    private Cidades cidadeAtual { get; set; } = new();
+    private Cidades cidadeAtual = new();
+    private bool modalAberto = false;
+    private string? mensagemErro;
+    private string? mensagemSucesso;
+    private string? mensagemErroModal;
 
     protected override async Task OnInitializedAsync()
     {
@@ -85,21 +113,14 @@
         listaEstados = await estadosService.GetEstadosAsync();
     }
 
-    private async Task Salvar()
+    private void AbrirModalNovo()
     {
-        if (cidadeAtual.CodCidade == 0)
-        {
-            await cidadesService.AddCidadeAsync(cidadeAtual);
-        }
-        else
-        {
-            await cidadesService.UpdateCidadeAsync(cidadeAtual);
-        }
         cidadeAtual = new Cidades();
-        await CarregarDados();
+        mensagemErroModal = null;
+        modalAberto = true;
     }
 
-    private void Editar(Cidades c)
+    private void AbrirModalEditar(Cidades c)
     {
         cidadeAtual = new Cidades
         {
@@ -107,16 +128,55 @@
             Cidade = c.Cidade,
             CodEstado = c.CodEstado
         };
+        mensagemErroModal = null;
+        modalAberto = true;
+    }
+
+    private void FecharModal()
+    {
+        modalAberto = false;
+        cidadeAtual = new Cidades();
+        mensagemErroModal = null;
+    }
+
+    private async Task Salvar()
+    {
+        LimparMensagens();
+        try
+        {
+            if (cidadeAtual.CodCidade == 0)
+                await cidadesService.AddCidadeAsync(cidadeAtual);
+            else
+                await cidadesService.UpdateCidadeAsync(cidadeAtual);
+
+            mensagemSucesso = "Cidade salva com sucesso.";
+            FecharModal();
+            await CarregarDados();
+        }
+        catch (Exception ex)
+        {
+            mensagemErroModal = ex.Message;
+        }
     }
 
     private async Task Excluir(int id)
     {
-        await cidadesService.DeleteCidadeAsync(id);
-        await CarregarDados();
+        LimparMensagens();
+        try
+        {
+            await cidadesService.DeleteCidadeAsync(id);
+            mensagemSucesso = "Cidade excluída com sucesso.";
+            await CarregarDados();
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = ex.Message;
+        }
     }
 
-    private void Cancelar()
+    private void LimparMensagens()
     {
-        cidadeAtual = new Cidades();
+        mensagemErro = null;
+        mensagemSucesso = null;
     }
 }

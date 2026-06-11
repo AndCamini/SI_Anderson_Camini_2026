@@ -1,0 +1,195 @@
+﻿@page "/produtos"
+@rendermode InteractiveServer
+@using ProjetoSalaoDeBeleza.Models
+@using ProjetoSalaoDeBeleza.Services
+@inject ProdutosService produtosService
+@inject CategoriasService categoriasService
+
+<h3>Produtos</h3>
+
+@if (!string.IsNullOrEmpty(mensagemErro))
+{
+    <div class="alert alert-danger">@mensagemErro</div>
+}
+@if (!string.IsNullOrEmpty(mensagemSucesso))
+{
+    <div class="alert alert-success">@mensagemSucesso</div>
+}
+
+<EditForm Model="@produtoAtual" OnValidSubmit="Salvar" FormName="formProdutos">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-2">
+        <label>Nome:</label>
+        <InputText @bind-Value="produtoAtual.Produto" class="form-control" />
+        <ValidationMessage For="@(() => produtoAtual.Produto)" />
+    </div>
+    <div class="mb-2">
+        <label>Descrição:</label>
+        <InputTextArea @bind-Value="produtoAtual.Descricao" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label>Categoria:</label>
+        <InputSelect @bind-Value="produtoAtual.CodCategoria" class="form-control">
+            <option value="0">Selecione...</option>
+            @foreach (var cat in listaCategorias)
+            {
+                <option value="@cat.CodCategoria">@cat.Categoria</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="row">
+        <div class="col mb-2">
+            <label>Preço de Custo:</label>
+            <InputNumber @bind-Value="produtoAtual.PrecoCusto" class="form-control" />
+            <ValidationMessage For="@(() => produtoAtual.PrecoCusto)" />
+        </div>
+        <div class="col mb-2">
+            <label>Preço de Venda:</label>
+            <InputNumber @bind-Value="produtoAtual.PrecoVenda" class="form-control" />
+            <ValidationMessage For="@(() => produtoAtual.PrecoVenda)" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col mb-2">
+            <label>Estoque:</label>
+            <InputNumber @bind-Value="produtoAtual.Estoque" class="form-control" />
+            <ValidationMessage For="@(() => produtoAtual.Estoque)" />
+        </div>
+        <div class="col mb-2">
+            <label>Unidade de Medida:</label>
+            <InputText @bind-Value="produtoAtual.UnidadeMedida" class="form-control" />
+            <ValidationMessage For="@(() => produtoAtual.UnidadeMedida)" />
+        </div>
+    </div>
+    <div class="mb-2 form-check">
+        <InputCheckbox @bind-Value="produtoAtual.Ativo" class="form-check-input" />
+        <label class="form-check-label">Ativo</label>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-2">Salvar</button>
+    <button type="button" class="btn btn-secondary mt-2" @onclick="Cancelar">Cancelar</button>
+</EditForm>
+
+<hr />
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Cód</th>
+            <th>Nome</th>
+            <th>Categoria</th>
+            <th>Custo</th>
+            <th>Venda</th>
+            <th>Estoque</th>
+            <th>Unidade</th>
+            <th>Ativo</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in listaProdutos)
+        {
+            <tr>
+                <td>@p.CodProduto</td>
+                <td>@p.Produto</td>
+                <td>@p.oCategoria?.Categoria</td>
+                <td>@p.PrecoCusto.ToString("C2")</td>
+                <td>@p.PrecoVenda.ToString("C2")</td>
+                <td>@p.Estoque</td>
+                <td>@p.UnidadeMedida</td>
+                <td>@(p.Ativo ? "Sim" : "Não")</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" @onclick="() => Editar(p)">Editar</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => Excluir(p.CodProduto)">Excluir</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Produtos> listaProdutos = new();
+    private List<Categorias> listaCategorias = new();
+    private string? mensagemErro;
+    private string? mensagemSucesso;
+
+    [SupplyParameterFromForm(FormName = "formProdutos")]
+    private Produtos produtoAtual { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaCategorias = await categoriasService.GetCategoriasAsync();
+        await CarregarProdutos();
+    }
+
+    private async Task CarregarProdutos()
+    {
+        listaProdutos = await produtosService.GetProdutosAsync();
+    }
+
+    private async Task Salvar()
+    {
+        LimparMensagens();
+        try
+        {
+            if (produtoAtual.CodProduto == 0)
+                await produtosService.AddProdutoAsync(produtoAtual);
+            else
+                await produtosService.UpdateProdutoAsync(produtoAtual);
+
+            mensagemSucesso = "Produto salvo com sucesso.";
+            produtoAtual = new Produtos();
+            await CarregarProdutos();
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = ex.Message;
+        }
+    }
+
+    private void Editar(Produtos p)
+    {
+        LimparMensagens();
+        produtoAtual = new Produtos
+        {
+            CodProduto = p.CodProduto,
+            Produto = p.Produto,
+            Descricao = p.Descricao,
+            PrecoCusto = p.PrecoCusto,
+            PrecoVenda = p.PrecoVenda,
+            Estoque = p.Estoque,
+            UnidadeMedida = p.UnidadeMedida,
+            Ativo = p.Ativo,
+            CodCategoria = p.CodCategoria
+        };
+    }
+
+    private async Task Excluir(int id)
+    {
+        LimparMensagens();
+        try
+        {
+            await produtosService.DeleteProdutoAsync(id);
+            mensagemSucesso = "Produto excluído com sucesso.";
+            await CarregarProdutos();
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = ex.Message;
+        }
+    }
+
+    private void Cancelar()
+    {
+        produtoAtual = new Produtos();
+        LimparMensagens();
+    }
+
+    private void LimparMensagens()
+    {
+        mensagemErro = null;
+        mensagemSucesso = null;
+    }
+}

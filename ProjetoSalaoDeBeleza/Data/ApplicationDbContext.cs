@@ -15,6 +15,8 @@ namespace ProjetoSalaoDeBeleza.Data
         public DbSet<ProjetoSalaoDeBeleza.Models.Funcionarios> Funcionarios { get; set; }
         public DbSet<ProjetoSalaoDeBeleza.Models.CondicaoPagamento> CondicoesPagamento { get; set; }
         public DbSet<ProjetoSalaoDeBeleza.Models.CondicaoPagamentoParcela> CondicoesPagamentoParcelas { get; set; }
+        public DbSet<ProjetoSalaoDeBeleza.Models.Categorias> Categorias { get; set; }
+        public DbSet<ProjetoSalaoDeBeleza.Models.Produtos> Produtos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

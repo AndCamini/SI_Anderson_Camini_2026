@@ -5,7 +5,7 @@
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">ProjetoSalaoDeBeleza</a>
+        <a class="navbar-brand" href="">Emerson Correa Hair</a>
     </div>
 </div>
 
@@ -24,7 +24,6 @@
                 <span class="bi bi-globe" aria-hidden="true"></span> Localidades
             </NavLink>
         </div>
-
         @if (expandirLocalidade)
         {
             <div class="nav-item px-3" style="margin-left: 1.5rem;">
@@ -44,7 +43,49 @@
             </div>
         }
 
-        
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" @onclick="ToggleCadastro" style="cursor: pointer;">
+                <span class="bi bi-person-lines-fill" aria-hidden="true"></span> Cadastros
+            </NavLink>
+        </div>
+        @if (expandirCadastro)
+        {
+            <div class="nav-item px-3" style="margin-left: 1.5rem;">
+                <NavLink class="nav-link" href="clientes">
+                    <span class="bi bi-people" aria-hidden="true"></span> Clientes
+                </NavLink>
+            </div>
+            <div class="nav-item px-3" style="margin-left: 1.5rem;">
+                <NavLink class="nav-link" href="funcionarios">
+                    <span class="bi bi-person-badge" aria-hidden="true"></span> Funcionários
+                </NavLink>
+            </div>
+            <div class="nav-item px-3" style="margin-left: 1.5rem;">
+                <NavLink class="nav-link" href="categorias">
+                    <span class="bi bi-tag" aria-hidden="true"></span> Categorias
+                </NavLink>
+            </div>
+            <div class="nav-item px-3" style="margin-left: 1.5rem;">
+                <NavLink class="nav-link" href="produtos">
+                    <span class="bi bi-box-seam" aria-hidden="true"></span> Produtos
+                </NavLink>
+            </div>
+        }
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" @onclick="ToggleFinanceiro" style="cursor: pointer;">
+                <span class="bi bi-cash-coin" aria-hidden="true"></span> Financeiro
+            </NavLink>
+        </div>
+        @if (expandirFinanceiro)
+        {
+            <div class="nav-item px-3" style="margin-left: 1.5rem;">
+                <NavLink class="nav-link" href="condicoes-pagamento">
+                    <span class="bi bi-credit-card" aria-hidden="true"></span> Condições de Pagamento
+                </NavLink>
+            </div>
+        }
+
     </nav>
 </div>
 
@@ -76,11 +117,11 @@
         collapseNavMenu = !collapseNavMenu;
     }
 
-    private bool expandirLocalidade = false; // Começa fechado
+    private bool expandirLocalidade = false;
+    private bool expandirCadastro = false;
+    private bool expandirFinanceiro = false;
 
-    private void ToggleLocalidade()
-    {
-        expandirLocalidade = !expandirLocalidade; // Inverte entre aberto e fechado
-    }
+    private void ToggleLocalidade() => expandirLocalidade = !expandirLocalidade;
+    private void ToggleCadastro() => expandirCadastro = !expandirCadastro;
+    private void ToggleFinanceiro() => expandirFinanceiro = !expandirFinanceiro;
 }
-
