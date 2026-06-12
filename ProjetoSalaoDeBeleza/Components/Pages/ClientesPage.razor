@@ -3,63 +3,38 @@
 @using ProjetoSalaoDeBeleza.Models
 @using ProjetoSalaoDeBeleza.Services
 @inject ClientesService clientesService
+@inject CidadesService cidadesService
 
-<h3>Cadastro de Clientes</h3>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Clientes</h3>
+    <button class="btn btn-primary" @onclick="AbrirModalNovo">+ Cadastrar novo</button>
+</div>
 
-<EditForm Model="@clienteAtual" OnValidSubmit="Salvar" FormName="formClientes">
-    <div class="mb-2">
-        <label>Nome:</label>
-        <InputText @bind-Value="clienteAtual.Nome" class="form-control" />
+@if (!string.IsNullOrEmpty(mensagemErro))
+{
+    <div class="alert alert-danger alert-dismissible">
+        @mensagemErro
+        <button type="button" class="btn-close" @onclick="LimparMensagens"></button>
     </div>
-    <div class="mb-2">
-        <label>CPF:</label>
-        <InputText @bind-Value="clienteAtual.CPF" class="form-control" />
+}
+@if (!string.IsNullOrEmpty(mensagemSucesso))
+{
+    <div class="alert alert-success alert-dismissible">
+        @mensagemSucesso
+        <button type="button" class="btn-close" @onclick="LimparMensagens"></button>
     </div>
-    <div class="mb-2">
-        <label>Email:</label>
-        <InputText @bind-Value="clienteAtual.Email" class="form-control" />
-    </div>
-    <div class="mb-2">
-        <label>Telefone:</label>
-        <InputText @bind-Value="clienteAtual.Telefone" class="form-control" />
-    </div>
-    <div class="mb-2">
-        <label>Data de Nascimento:</label>
-        <InputDate @bind-Value="clienteAtual.DataNascimento" class="form-control" />
-    </div>
-    <div class="mb-2">
-        <label>Cidade:</label>
-        <InputNumber @bind-Value="clienteAtual.CodCidade" class="form-control" />
-    </div>
-    <div class="mb-2">
-        <label>Observações:</label>
-        <InputTextArea @bind-Value="clienteAtual.Observacoes" class="form-control" />
-    </div>
-    <div class="mb-2 form-check">
-        <InputCheckbox @bind-Value="clienteAtual.RecebeNotificacoes" class="form-check-input" />
-        <label class="form-check-label">Recebe Notificações</label>
-    </div>
-    <div class="mb-2 form-check">
-        <InputCheckbox @bind-Value="clienteAtual.Ativo" class="form-check-input" />
-        <label class="form-check-label">Ativo</label>
-    </div>
-    <button type="submit" class="btn btn-primary mt-2">Salvar</button>
-    <button type="button" class="btn btn-secondary mt-2" @onclick="Cancelar">Cancelar</button>
-</EditForm>
+}
 
-<hr />
-
-<table class="table">
-    <thead>
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
         <tr>
             <th>Cód</th>
             <th>Nome</th>
             <th>CPF</th>
             <th>Email</th>
             <th>Telefone</th>
-            <th>Data Nascimento</th>
+            <th>Nascimento</th>
             <th>Cidade</th>
-            <th>Observações</th>
             <th>Notificações</th>
             <th>Ativo</th>
             <th>Ações</th>
@@ -76,26 +51,146 @@
                 <td>@c.Telefone</td>
                 <td>@c.DataNascimento.ToString("dd/MM/yyyy")</td>
                 <td>@c.oCidade?.Cidade</td>
-                <td>@c.Observacoes</td>
                 <td>@(c.RecebeNotificacoes ? "Sim" : "Não")</td>
                 <td>@(c.Ativo ? "Sim" : "Não")</td>
                 <td>
-                    <button class="btn btn-warning btn-sm" @onclick="() => Editar(c)">Editar</button>
-                    <button class="btn btn-danger btn-sm" @onclick="() => Excluir(c.CodPessoa)">Excluir</button>
+                    <button class="btn btn-warning btn-sm" @onclick="() => AbrirModalEditar(c)">Editar</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => AbrirModalExcluir(c)">Excluir</button>
                 </td>
             </tr>
         }
     </tbody>
 </table>
 
+@* Modal Cadastro/Edição *@
+@if (modalFormAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(clienteAtual.CodPessoa == 0 ? "Novo Cliente" : "Editar Cliente")</h5>
+                    <button type="button" class="btn-close" @onclick="FecharModalForm"></button>
+                </div>
+                <EditForm Model="@clienteAtual" OnValidSubmit="Salvar">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        @if (!string.IsNullOrEmpty(mensagemErroModal))
+                        {
+                            <div class="alert alert-danger">@mensagemErroModal</div>
+                        }
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label">Nome</label>
+                                <InputText @bind-Value="clienteAtual.Nome" class="form-control" />
+                                <ValidationMessage For="@(() => clienteAtual.Nome)" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">CPF</label>
+                                <InputText @bind-Value="clienteAtual.CPF" class="form-control" maxlength="11" />
+                                <ValidationMessage For="@(() => clienteAtual.CPF)" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <InputText @bind-Value="clienteAtual.Email" class="form-control" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Telefone</label>
+                                <InputText @bind-Value="clienteAtual.Telefone" class="form-control" maxlength="15" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Data de Nascimento</label>
+                                <InputDate @bind-Value="clienteAtual.DataNascimento" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cidade</label>
+                            <InputSelect @bind-Value="clienteAtual.CodCidade" class="form-select">
+                                <option value="0">Selecione...</option>
+                                @foreach (var cidade in listaCidades)
+                                {
+                                    <option value="@cidade.CodCidade">@cidade.Cidade</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observações</label>
+                            <InputTextArea @bind-Value="clienteAtual.Observacoes" class="form-control" rows="3" />
+                        </div>
+                        <div class="row">
+                            <div class="col-auto mb-3 form-check ms-3">
+                                <InputCheckbox @bind-Value="clienteAtual.RecebeNotificacoes" class="form-check-input" id="notifCheck" />
+                                <label class="form-check-label" for="notifCheck">Recebe Notificações</label>
+                            </div>
+                            <div class="col-auto mb-3 form-check">
+                                <InputCheckbox @bind-Value="clienteAtual.Ativo" class="form-check-input" id="ativoCheckCliente" />
+                                <label class="form-check-label" for="ativoCheckCliente">Ativo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="FecharModalForm">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@* Modal Confirmação de Exclusão *@
+@if (modalExcluirAberto && clienteExcluir != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModalExcluir"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger fw-bold">Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.</p>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr><th>Código</th><td>@clienteExcluir.CodPessoa</td></tr>
+                            <tr><th>Nome</th><td>@clienteExcluir.Nome</td></tr>
+                            <tr><th>CPF</th><td>@clienteExcluir.CPF</td></tr>
+                            <tr><th>Email</th><td>@clienteExcluir.Email</td></tr>
+                            <tr><th>Telefone</th><td>@clienteExcluir.Telefone</td></tr>
+                            <tr><th>Nascimento</th><td>@clienteExcluir.DataNascimento.ToString("dd/MM/yyyy")</td></tr>
+                            <tr><th>Cidade</th><td>@clienteExcluir.oCidade?.Cidade</td></tr>
+                            <tr><th>Cadastro</th><td>@clienteExcluir.DataCadastro.ToString("dd/MM/yyyy")</td></tr>
+                            <tr><th>Total Visitas</th><td>@clienteExcluir.TotalVisitas</td></tr>
+                            <tr><th>Total Gasto</th><td>@clienteExcluir.TotalGasto.ToString("C2")</td></tr>
+                            <tr><th>Ativo</th><td>@(clienteExcluir.Ativo ? "Sim" : "Não")</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModalExcluir">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmarExclusao">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<Clientes> listaClientes = new();
-
-    [SupplyParameterFromForm(FormName = "formClientes")]
-    private Clientes clienteAtual { get; set; } = new();
+    private List<Cidades> listaCidades = new();
+    private Clientes clienteAtual = new();
+    private Clientes? clienteExcluir;
+    private bool modalFormAberto = false;
+    private bool modalExcluirAberto = false;
+    private string? mensagemErro;
+    private string? mensagemSucesso;
+    private string? mensagemErroModal;
 
     protected override async Task OnInitializedAsync()
     {
+        listaCidades = await cidadesService.GetCidadesAsync();
         await CarregarClientes();
     }
 
@@ -104,21 +199,14 @@
         listaClientes = await clientesService.GetClientesAsync();
     }
 
-    private async Task Salvar()
+    private void AbrirModalNovo()
     {
-        if (clienteAtual.CodPessoa == 0)
-        {
-            await clientesService.AddClienteAsync(clienteAtual);
-        }
-        else
-        {
-            await clientesService.UpdateClienteAsync(clienteAtual);
-        }
         clienteAtual = new Clientes();
-        await CarregarClientes();
+        mensagemErroModal = null;
+        modalFormAberto = true;
     }
 
-    private void Editar(Clientes c)
+    private void AbrirModalEditar(Clientes c)
     {
         clienteAtual = new Clientes
         {
@@ -137,16 +225,70 @@
             UltimaVisita = c.UltimaVisita,
             RecebeNotificacoes = c.RecebeNotificacoes
         };
+        mensagemErroModal = null;
+        modalFormAberto = true;
     }
 
-    private async Task Excluir(int id)
+    private void FecharModalForm()
     {
-        await clientesService.DeleteClienteAsync(id);
-        await CarregarClientes();
-    }
-
-    private void Cancelar()
-    {
+        modalFormAberto = false;
         clienteAtual = new Clientes();
+        mensagemErroModal = null;
+    }
+
+    private void AbrirModalExcluir(Clientes c)
+    {
+        clienteExcluir = c;
+        modalExcluirAberto = true;
+    }
+
+    private void FecharModalExcluir()
+    {
+        modalExcluirAberto = false;
+        clienteExcluir = null;
+    }
+
+    private async Task Salvar()
+    {
+        LimparMensagens();
+        try
+        {
+            if (clienteAtual.CodPessoa == 0)
+                await clientesService.AddClienteAsync(clienteAtual);
+            else
+                await clientesService.UpdateClienteAsync(clienteAtual);
+
+            mensagemSucesso = "Cliente salvo com sucesso.";
+            FecharModalForm();
+            await CarregarClientes();
+        }
+        catch (Exception ex)
+        {
+            mensagemErroModal = ex.Message;
+        }
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (clienteExcluir == null) return;
+        LimparMensagens();
+        try
+        {
+            await clientesService.DeleteClienteAsync(clienteExcluir.CodPessoa);
+            mensagemSucesso = "Cliente excluído com sucesso.";
+            FecharModalExcluir();
+            await CarregarClientes();
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = ex.Message;
+            FecharModalExcluir();
+        }
+    }
+
+    private void LimparMensagens()
+    {
+        mensagemErro = null;
+        mensagemSucesso = null;
     }
 }

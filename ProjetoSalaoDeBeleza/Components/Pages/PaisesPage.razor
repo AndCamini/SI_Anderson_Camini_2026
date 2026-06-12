@@ -46,7 +46,7 @@
                 <td>@p.Moeda</td>
                 <td>
                     <button class="btn btn-warning btn-sm" @onclick="() => AbrirModalEditar(p)">Editar</button>
-                    <button class="btn btn-danger btn-sm" @onclick="() => Excluir(p.CodPais)">Excluir</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => AbrirModalExcluir(p)">Excluir</button>
                 </td>
             </tr>
         }
@@ -97,6 +97,36 @@
                         <button type="submit" class="btn btn-primary">Salvar</button>
                     </div>
                 </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@if (modalExcluirAberto && paisExcluir != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModalExcluir"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger fw-bold">Tem certeza que deseja excluir este país? Esta ação não pode ser desfeita.</p>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr><th>Código</th><td>@paisExcluir.CodPais</td></tr>
+                            <tr><th>País</th><td>@paisExcluir.Pais</td></tr>
+                            <tr><th>Sigla</th><td>@paisExcluir.Sigla</td></tr>
+                            <tr><th>DDI</th><td>@paisExcluir.DDI</td></tr>
+                            <tr><th>Moeda</th><td>@paisExcluir.Moeda</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModalExcluir">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmarExclusao">Excluir</button>
+                </div>
             </div>
         </div>
     </div>
@@ -168,18 +198,36 @@
         }
     }
 
-    private async Task Excluir(int id)
+    private Paises? paisExcluir;
+    private bool modalExcluirAberto = false;
+
+    private void AbrirModalExcluir(Paises p)
     {
+        paisExcluir = p;
+        modalExcluirAberto = true;
+    }
+
+    private void FecharModalExcluir()
+    {
+        modalExcluirAberto = false;
+        paisExcluir = null;
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (paisExcluir == null) return;
         LimparMensagens();
         try
         {
-            await paisesService.DeletePaisAsync(id);
+            await paisesService.DeletePaisAsync(paisExcluir.CodPais);
             mensagemSucesso = "País excluído com sucesso.";
+            FecharModalExcluir();
             await CarregarPaises();
         }
         catch (Exception ex)
         {
             mensagemErro = ex.Message;
+            FecharModalExcluir();
         }
     }
 

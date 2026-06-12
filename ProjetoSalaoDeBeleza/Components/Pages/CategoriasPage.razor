@@ -42,7 +42,7 @@
                 <td>@(c.Ativo ? "Sim" : "Não")</td>
                 <td>
                     <button class="btn btn-warning btn-sm" @onclick="() => AbrirModalEditar(c)">Editar</button>
-                    <button class="btn btn-danger btn-sm" @onclick="() => Excluir(c.CodCategoria)">Excluir</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => AbrirModalExcluir(c)">Excluir</button>
                 </td>
             </tr>
         }
@@ -80,6 +80,34 @@
                         <button type="submit" class="btn btn-primary">Salvar</button>
                     </div>
                 </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@if (modalExcluirAberto && categoriaExcluir != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModalExcluir"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger fw-bold">Tem certeza que deseja excluir esta categoria? Esta ação não pode ser desfeita.</p>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr><th>Código</th><td>@categoriaExcluir.CodCategoria</td></tr>
+                            <tr><th>Nome</th><td>@categoriaExcluir.Categoria</td></tr>
+                            <tr><th>Ativo</th><td>@(categoriaExcluir.Ativo ? "Sim" : "Não")</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModalExcluir">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmarExclusao">Excluir</button>
+                </div>
             </div>
         </div>
     </div>
@@ -149,18 +177,36 @@
         }
     }
 
-    private async Task Excluir(int id)
+    private Categorias? categoriaExcluir;
+    private bool modalExcluirAberto = false;
+
+    private void AbrirModalExcluir(Categorias c)
     {
+        categoriaExcluir = c;
+        modalExcluirAberto = true;
+    }
+
+    private void FecharModalExcluir()
+    {
+        modalExcluirAberto = false;
+        categoriaExcluir = null;
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (categoriaExcluir == null) return;
         LimparMensagens();
         try
         {
-            await categoriasService.DeleteCategoriaAsync(id);
+            await categoriasService.DeleteCategoriaAsync(categoriaExcluir.CodCategoria);
             mensagemSucesso = "Categoria excluída com sucesso.";
+            FecharModalExcluir();
             await CarregarCategorias();
         }
         catch (Exception ex)
         {
             mensagemErro = ex.Message;
+            FecharModalExcluir();
         }
     }
 

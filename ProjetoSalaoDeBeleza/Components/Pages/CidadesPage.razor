@@ -43,7 +43,7 @@
                 <td>@listaEstados.FirstOrDefault(e => e.CodEstado == c.CodEstado)?.Estado</td>
                 <td>
                     <button class="btn btn-warning btn-sm" @onclick="() => AbrirModalEditar(c)">Editar</button>
-                    <button class="btn btn-danger btn-sm" @onclick="() => Excluir(c.CodCidade)">Excluir</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => AbrirModalExcluir(c)">Excluir</button>
                 </td>
             </tr>
         }
@@ -88,6 +88,34 @@
                         <button type="submit" class="btn btn-primary">Salvar</button>
                     </div>
                 </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@if (modalExcluirAberto && cidadeExcluir != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModalExcluir"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger fw-bold">Tem certeza que deseja excluir esta cidade? Esta ação não pode ser desfeita.</p>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr><th>Código</th><td>@cidadeExcluir.CodCidade</td></tr>
+                            <tr><th>Cidade</th><td>@cidadeExcluir.Cidade</td></tr>
+                            <tr><th>Estado</th><td>@listaEstados.FirstOrDefault(e => e.CodEstado == cidadeExcluir.CodEstado)?.Estado</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModalExcluir">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmarExclusao">Excluir</button>
+                </div>
             </div>
         </div>
     </div>
@@ -159,18 +187,36 @@
         }
     }
 
-    private async Task Excluir(int id)
+    private Cidades? cidadeExcluir;
+    private bool modalExcluirAberto = false;
+
+    private void AbrirModalExcluir(Cidades c)
     {
+        cidadeExcluir = c;
+        modalExcluirAberto = true;
+    }
+
+    private void FecharModalExcluir()
+    {
+        modalExcluirAberto = false;
+        cidadeExcluir = null;
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (cidadeExcluir == null) return;
         LimparMensagens();
         try
         {
-            await cidadesService.DeleteCidadeAsync(id);
+            await cidadesService.DeleteCidadeAsync(cidadeExcluir.CodCidade);
             mensagemSucesso = "Cidade excluída com sucesso.";
+            FecharModalExcluir();
             await CarregarDados();
         }
         catch (Exception ex)
         {
             mensagemErro = ex.Message;
+            FecharModalExcluir();
         }
     }
 

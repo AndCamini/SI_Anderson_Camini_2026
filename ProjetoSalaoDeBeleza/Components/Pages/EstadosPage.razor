@@ -31,10 +31,6 @@
             <th>Cód</th>
             <th>Estado</th>
             <th>UF</th>
-<<<<<<< HEAD
-=======
-            <th>Cód. País</th>
->>>>>>> ccb7f4c620f1dec90ee443987b614331aeedc2ba
             <th>País</th>
             <th>Ações</th>
         </tr>
@@ -43,21 +39,13 @@
         @foreach (var e in listaEstados)
         {
             <tr>
-<<<<<<< HEAD
                 <td>@e.CodEstado</td>
                 <td>@e.Estado</td>
                 <td>@e.UF</td>
                 <td>@listaPaises.FirstOrDefault(p => p.CodPais == e.CodPais)?.Pais</td>
-=======
-                <td>@estado.CodEstado</td>
-                <td>@estado.Estado</td>
-                <td>@estado.UF</td>
-                <td>@estado.CodPais</td>
-                <td>@estado.oPais.Pais</td>
->>>>>>> ccb7f4c620f1dec90ee443987b614331aeedc2ba
                 <td>
                     <button class="btn btn-warning btn-sm" @onclick="() => AbrirModalEditar(e)">Editar</button>
-                    <button class="btn btn-danger btn-sm" @onclick="() => Excluir(e.CodEstado)">Excluir</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => AbrirModalExcluir(e)">Excluir</button>
                 </td>
             </tr>
         }
@@ -107,6 +95,35 @@
                         <button type="submit" class="btn btn-primary">Salvar</button>
                     </div>
                 </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@if (modalExcluirAberto && estadoExcluir != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModalExcluir"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger fw-bold">Tem certeza que deseja excluir este estado? Esta ação não pode ser desfeita.</p>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr><th>Código</th><td>@estadoExcluir.CodEstado</td></tr>
+                            <tr><th>Estado</th><td>@estadoExcluir.Estado</td></tr>
+                            <tr><th>UF</th><td>@estadoExcluir.UF</td></tr>
+                            <tr><th>País</th><td>@listaPaises.FirstOrDefault(p => p.CodPais == estadoExcluir.CodPais)?.Pais</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModalExcluir">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmarExclusao">Excluir</button>
+                </div>
             </div>
         </div>
     </div>
@@ -179,18 +196,36 @@
         }
     }
 
-    private async Task Excluir(int id)
+    private Estados? estadoExcluir;
+    private bool modalExcluirAberto = false;
+
+    private void AbrirModalExcluir(Estados e)
     {
+        estadoExcluir = e;
+        modalExcluirAberto = true;
+    }
+
+    private void FecharModalExcluir()
+    {
+        modalExcluirAberto = false;
+        estadoExcluir = null;
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (estadoExcluir == null) return;
         LimparMensagens();
         try
         {
-            await estadosService.DeleteEstadoAsync(id);
+            await estadosService.DeleteEstadoAsync(estadoExcluir.CodEstado);
             mensagemSucesso = "Estado excluído com sucesso.";
+            FecharModalExcluir();
             await CarregarDados();
         }
         catch (Exception ex)
         {
             mensagemErro = ex.Message;
+            FecharModalExcluir();
         }
     }
 
