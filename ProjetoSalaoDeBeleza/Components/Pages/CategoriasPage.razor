@@ -58,7 +58,7 @@
                     <h5 class="modal-title">@(categoriaAtual.CodCategoria == 0 ? "Nova Categoria" : "Editar Categoria")</h5>
                     <button type="button" class="btn-close" @onclick="FecharModal"></button>
                 </div>
-                <EditForm Model="@categoriaAtual" OnValidSubmit="Salvar">
+                <EditForm Model="@categoriaAtual" OnValidSubmit="Salvar" FormName="formCategorias">
                     <DataAnnotationsValidator />
                     <div class="modal-body">
                         @if (!string.IsNullOrEmpty(mensagemErroModal))

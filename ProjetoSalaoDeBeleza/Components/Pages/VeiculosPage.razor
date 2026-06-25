@@ -1,0 +1,455 @@
+﻿@page "/veiculos"
+@rendermode InteractiveServer
+@using ProjetoSalaoDeBeleza.Models
+@using ProjetoSalaoDeBeleza.Services
+@inject VeiculosService veiculosService
+@inject MarcasVeiculosService marcasService
+@inject TiposVeiculoService tiposService
+@inject TransportadoresService transportadoresService
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Veículos</h3>
+    <button class="btn btn-primary" @onclick="AbrirModalNovo">+ Cadastrar novo</button>
+</div>
+
+@if (!string.IsNullOrEmpty(mensagemErro))
+{
+    <div class="alert alert-danger alert-dismissible">
+        @mensagemErro
+        <button type="button" class="btn-close" @onclick="LimparMensagens"></button>
+    </div>
+}
+@if (!string.IsNullOrEmpty(mensagemSucesso))
+{
+    <div class="alert alert-success alert-dismissible">
+        @mensagemSucesso
+        <button type="button" class="btn-close" @onclick="LimparMensagens"></button>
+    </div>
+}
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Cód</th>
+            <th>Placa</th>
+            <th>Mercosul</th>
+            <th>Modelo</th>
+            <th>Marca</th>
+            <th>Tipo</th>
+            <th>Cor</th>
+            <th>Ano</th>
+            <th>Transportador</th>
+            <th>Ativo</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var v in listaVeiculos)
+        {
+            <tr>
+                <td>@v.CodVeiculo</td>
+                <td>@v.Placa</td>
+                <td>@(v.PlacaMercosul ? "Sim" : "Não")</td>
+                <td>@v.Modelo</td>
+                <td>@v.oMarca?.MarcaVeiculo</td>
+                <td>@v.oTipo?.Tipo</td>
+                <td>@v.Cor</td>
+                <td>@v.Ano</td>
+                <td>@v.oTransportador?.Nome</td>
+                <td>@(v.Ativo ? "Sim" : "Não")</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" @onclick="() => AbrirModalEditar(v)">Editar</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => AbrirModalExcluir(v)">Excluir</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@* Modal Cadastro/Edição *@
+@if (modalFormAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(veiculoAtual.CodVeiculo == 0 ? "Novo Veículo" : "Editar Veículo")</h5>
+                    <button type="button" class="btn-close" @onclick="FecharModalForm"></button>
+                </div>
+                <EditForm Model="@veiculoAtual" OnValidSubmit="Salvar" FormName="formVeiculos">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        @if (!string.IsNullOrEmpty(mensagemErroModal))
+                        {
+                            <div class="alert alert-danger">@mensagemErroModal</div>
+                        }
+
+                        <div class="row align-items-end mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Placa</label>
+                                <InputText @bind-Value="veiculoAtual.Placa" class="form-control text-uppercase" maxlength="7" />
+                                <ValidationMessage For="@(() => veiculoAtual.Placa)" />
+                            </div>
+                            <div class="col-md-4 form-check ms-3 mt-4">
+                                <InputCheckbox @bind-Value="veiculoAtual.PlacaMercosul" class="form-check-input" id="mercosulCheck" />
+                                <label class="form-check-label" for="mercosulCheck">Placa Mercosul</label>
+                            </div>
+                        </div>
+                        @if (veiculoAtual.PlacaMercosul)
+                        {
+                            <div class="alert alert-info py-1 mb-3">
+                                <small>Formato Mercosul: <strong>AAA0A00</strong> (3 letras, 1 número, 1 letra, 2 números)</small>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-info py-1 mb-3">
+                                <small>Formato padrão: <strong>AAA0000</strong> (3 letras e 4 números)</small>
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Modelo</label>
+                                <InputText @bind-Value="veiculoAtual.Modelo" class="form-control" />
+                                <ValidationMessage For="@(() => veiculoAtual.Modelo)" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Cor</label>
+                                <InputText @bind-Value="veiculoAtual.Cor" class="form-control" maxlength="50" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Ano</label>
+                                <InputNumber @bind-Value="veiculoAtual.Ano" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="row align-items-end mb-3">
+                            <div class="col">
+                                <label class="form-label">Marca</label>
+                                <InputSelect @bind-Value="veiculoAtual.CodMarca" class="form-select">
+                                    <option value="0">Selecione...</option>
+                                    @foreach (var m in listaMarcas)
+                                    {
+                                        <option value="@m.CodMarca">@m.MarcaVeiculo</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-outline-secondary"
+                                        @onclick="() => modalNovaMarcaAberto = true">
+                                    + Nova
+                                </button>
+                            </div>
+                        </div>
+
+                        @* Mini-modal Nova Marca *@
+                        @if (modalNovaMarcaAberto)
+                        {
+                            <div class="card border-primary mb-3">
+                                <div class="card-header bg-primary text-white d-flex justify-content-between">
+                                    <span>Nova Marca</span>
+                                    <button type="button" class="btn-close btn-close-white btn-sm"
+                                            @onclick="() => { modalNovaMarcaAberto = false; novaMarca = new(); }"></button>
+                                </div>
+                                <div class="card-body">
+                                    @if (!string.IsNullOrEmpty(erroNovaMarca))
+                                    {
+                                        <div class="alert alert-danger py-1">@erroNovaMarca</div>
+                                    }
+                                    <div class="row align-items-end">
+                                        <div class="col mb-2">
+                                            <label class="form-label">Nome da Marca</label>
+                                            <InputText @bind-Value="novaMarca.MarcaVeiculo" class="form-control" />
+                                        </div>
+                                        <div class="col-auto mb-2">
+                                            <button type="button" class="btn btn-primary" @onclick="SalvarNovaMarca">Salvar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="row align-items-end mb-3">
+                            <div class="col">
+                                <label class="form-label">Tipo</label>
+                                <InputSelect @bind-Value="veiculoAtual.CodTipo" class="form-select">
+                                    <option value="0">Selecione...</option>
+                                    @foreach (var t in listaTipos)
+                                    {
+                                        <option value="@t.CodTipo">@t.Tipo</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-outline-secondary"
+                                        @onclick="() => modalNovoTipoAberto = true">
+                                    + Novo
+                                </button>
+                            </div>
+                        </div>
+
+                        @* Mini-modal Novo Tipo *@
+                        @if (modalNovoTipoAberto)
+                        {
+                            <div class="card border-primary mb-3">
+                                <div class="card-header bg-primary text-white d-flex justify-content-between">
+                                    <span>Novo Tipo</span>
+                                    <button type="button" class="btn-close btn-close-white btn-sm"
+                                            @onclick="() => { modalNovoTipoAberto = false; novoTipo = new(); }"></button>
+                                </div>
+                                <div class="card-body">
+                                    @if (!string.IsNullOrEmpty(erroNovoTipo))
+                                    {
+                                        <div class="alert alert-danger py-1">@erroNovoTipo</div>
+                                    }
+                                    <div class="row align-items-end">
+                                        <div class="col mb-2">
+                                            <label class="form-label">Descrição do Tipo</label>
+                                            <InputText @bind-Value="novoTipo.Tipo" class="form-control" />
+                                        </div>
+                                        <div class="col-auto mb-2">
+                                            <button type="button" class="btn btn-primary" @onclick="SalvarNovoTipo">Salvar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label class="form-label">Transportador</label>
+                            <InputSelect @bind-Value="veiculoAtual.CodTransportador" class="form-select">
+                                <option value="0">Selecione...</option>
+                                @foreach (var t in listaTransportadores)
+                                {
+                                    <option value="@t.CodTransportador">@t.Nome</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <InputCheckbox @bind-Value="veiculoAtual.Ativo" class="form-check-input" id="ativoCheckVeic" />
+                            <label class="form-check-label" for="ativoCheckVeic">Ativo</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="FecharModalForm">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@* Modal Confirmação de Exclusão *@
+@if (modalExcluirAberto && veiculoExcluir != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModalExcluir"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger fw-bold">Tem certeza que deseja excluir este veículo? Esta ação não pode ser desfeita.</p>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr><th>Código</th><td>@veiculoExcluir.CodVeiculo</td></tr>
+                            <tr><th>Placa</th><td>@veiculoExcluir.Placa @(veiculoExcluir.PlacaMercosul ? "(Mercosul)" : "")</td></tr>
+                            <tr><th>Modelo</th><td>@veiculoExcluir.Modelo</td></tr>
+                            <tr><th>Marca</th><td>@veiculoExcluir.oMarca?.MarcaVeiculo</td></tr>
+                            <tr><th>Tipo</th><td>@veiculoExcluir.oTipo?.Tipo</td></tr>
+                            <tr><th>Cor</th><td>@veiculoExcluir.Cor</td></tr>
+                            <tr><th>Ano</th><td>@veiculoExcluir.Ano</td></tr>
+                            <tr><th>Transportador</th><td>@veiculoExcluir.oTransportador?.Nome</td></tr>
+                            <tr><th>Ativo</th><td>@(veiculoExcluir.Ativo ? "Sim" : "Não")</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModalExcluir">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmarExclusao">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Veiculos> listaVeiculos = new();
+    private List<MarcasVeiculos> listaMarcas = new();
+    private List<TiposVeiculos> listaTipos = new();
+    private List<Transportadores> listaTransportadores = new();
+    private Veiculos veiculoAtual = new();
+    private Veiculos? veiculoExcluir;
+    private bool modalFormAberto = false;
+    private bool modalExcluirAberto = false;
+    private bool modalNovaMarcaAberto = false;
+    private bool modalNovoTipoAberto = false;
+    private MarcasVeiculos novaMarca = new();
+    private TiposVeiculos novoTipo = new();
+    private string? mensagemErro;
+    private string? mensagemSucesso;
+    private string? mensagemErroModal;
+    private string? erroNovaMarca;
+    private string? erroNovoTipo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarAuxiliares();
+        await CarregarVeiculos();
+    }
+
+    private async Task CarregarAuxiliares()
+    {
+        listaMarcas = await marcasService.GetMarcasAsync();
+        listaTipos = await tiposService.GetTiposAsync();
+        listaTransportadores = await transportadoresService.GetTransportadoresAsync();
+    }
+
+    private async Task CarregarVeiculos()
+    {
+        listaVeiculos = await veiculosService.GetVeiculosAsync();
+    }
+
+    private void AbrirModalNovo()
+    {
+        veiculoAtual = new Veiculos { Ano = DateTime.Now.Year };
+        mensagemErroModal = null;
+        modalNovaMarcaAberto = false;
+        modalNovoTipoAberto = false;
+        modalFormAberto = true;
+    }
+
+    private void AbrirModalEditar(Veiculos v)
+    {
+        veiculoAtual = new Veiculos
+        {
+            CodVeiculo = v.CodVeiculo,
+            Placa = v.Placa,
+            PlacaMercosul = v.PlacaMercosul,
+            Modelo = v.Modelo,
+            Cor = v.Cor,
+            Ano = v.Ano,
+            CodMarca = v.CodMarca,
+            CodTipo = v.CodTipo,
+            CodTransportador = v.CodTransportador,
+            Ativo = v.Ativo
+        };
+        mensagemErroModal = null;
+        modalNovaMarcaAberto = false;
+        modalNovoTipoAberto = false;
+        modalFormAberto = true;
+    }
+
+    private void FecharModalForm()
+    {
+        modalFormAberto = false;
+        veiculoAtual = new Veiculos();
+        mensagemErroModal = null;
+        modalNovaMarcaAberto = false;
+        modalNovoTipoAberto = false;
+    }
+
+    private void AbrirModalExcluir(Veiculos v)
+    {
+        veiculoExcluir = v;
+        modalExcluirAberto = true;
+    }
+
+    private void FecharModalExcluir()
+    {
+        modalExcluirAberto = false;
+        veiculoExcluir = null;
+    }
+
+    private async Task SalvarNovaMarca()
+    {
+        erroNovaMarca = null;
+        if (string.IsNullOrWhiteSpace(novaMarca.MarcaVeiculo))
+        {
+            erroNovaMarca = "Nome é obrigatório.";
+            return;
+        }
+        try
+        {
+            await marcasService.AddMarcaAsync(novaMarca);
+            listaMarcas = await marcasService.GetMarcasAsync();
+            veiculoAtual.CodMarca = listaMarcas.First(m => m.MarcaVeiculo == novaMarca.MarcaVeiculo).CodMarca;
+            novaMarca = new MarcasVeiculos();
+            modalNovaMarcaAberto = false;
+        }
+        catch (Exception ex)
+        {
+            erroNovaMarca = ex.Message;
+        }
+    }
+
+    private async Task SalvarNovoTipo()
+    {
+        erroNovoTipo = null;
+        if (string.IsNullOrWhiteSpace(novoTipo.Tipo))
+        {
+            erroNovoTipo = "Descrição é obrigatória.";
+            return;
+        }
+        try
+        {
+            await tiposService.AddTipoAsync(novoTipo);
+            listaTipos = await tiposService.GetTiposAsync();
+            veiculoAtual.CodTipo = listaTipos.First(t => t.Tipo == novoTipo.Tipo).CodTipo;
+            novoTipo = new TiposVeiculos();
+            modalNovoTipoAberto = false;
+        }
+        catch (Exception ex)
+        {
+            erroNovoTipo = ex.Message;
+        }
+    }
+
+    private async Task Salvar()
+    {
+        LimparMensagens();
+        try
+        {
+            if (veiculoAtual.CodVeiculo == 0)
+                await veiculosService.AddVeiculoAsync(veiculoAtual);
+            else
+                await veiculosService.UpdateVeiculoAsync(veiculoAtual);
+
+            mensagemSucesso = "Veículo salvo com sucesso.";
+            FecharModalForm();
+            await CarregarVeiculos();
+        }
+        catch (Exception ex)
+        {
+            mensagemErroModal = ex.Message;
+        }
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (veiculoExcluir == null) return;
+        LimparMensagens();
+        try
+        {
+            await veiculosService.DeleteVeiculoAsync(veiculoExcluir.CodVeiculo);
+            mensagemSucesso = "Veículo excluído com sucesso.";
+            FecharModalExcluir();
+            await CarregarVeiculos();
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = ex.Message;
+            FecharModalExcluir();
+        }
+    }
+
+    private void LimparMensagens()
+    {
+        mensagemErro = null;
+        mensagemSucesso = null;
+    }
+}

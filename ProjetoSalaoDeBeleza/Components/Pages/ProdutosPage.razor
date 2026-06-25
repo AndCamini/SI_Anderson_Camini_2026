@@ -70,7 +70,7 @@
                     <h5 class="modal-title">@(produtoAtual.CodProduto == 0 ? "Novo Produto" : "Editar Produto")</h5>
                     <button type="button" class="btn-close" @onclick="FecharModalForm"></button>
                 </div>
-                <EditForm Model="@produtoAtual" OnValidSubmit="Salvar">
+                <EditForm Model="@produtoAtual" OnValidSubmit="Salvar" FormName="formProdutos">
                     <DataAnnotationsValidator />
                     <div class="modal-body">
                         @if (!string.IsNullOrEmpty(mensagemErroModal))

@@ -70,7 +70,7 @@
                     <h5 class="modal-title">@(funcionarioAtual.CodPessoa == 0 ? "Novo Funcionário" : "Editar Funcionário")</h5>
                     <button type="button" class="btn-close" @onclick="FecharModalForm"></button>
                 </div>
-                <EditForm Model="@funcionarioAtual" OnValidSubmit="Salvar">
+                <EditForm Model="@funcionarioAtual" OnValidSubmit="Salvar" FormName="formFuncionarios">
                     <DataAnnotationsValidator />
                     <div class="modal-body">
                         @if (!string.IsNullOrEmpty(mensagemErroModal))
@@ -117,6 +117,32 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Cargo</label>
                                 <InputText @bind-Value="funcionarioAtual.Cargo" class="form-control" maxlength="30" />
+                            </div>
+                            <hr class="my-2" />
+                            <h6 class="mb-3">Endereço</h6>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">CEP</label>
+                                    <InputText @bind-Value="funcionarioAtual.CEP" class="form-control" maxlength="8" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Logradouro</label>
+                                    <InputText @bind-Value="funcionarioAtual.Logradouro" class="form-control" />
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Número</label>
+                                    <InputText @bind-Value="funcionarioAtual.Numero" class="form-control" maxlength="10" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Bairro</label>
+                                    <InputText @bind-Value="funcionarioAtual.Bairro" class="form-control" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Complemento</label>
+                                    <InputText @bind-Value="funcionarioAtual.Complemento" class="form-control" />
+                                </div>
                             </div>
                         </div>
                         <div class="row">
@@ -237,7 +263,12 @@
             Salario = f.Salario,
             DataAdmissao = f.DataAdmissao,
             DataDemissao = f.DataDemissao,
-            ComissaoPercentual = f.ComissaoPercentual
+            ComissaoPercentual = f.ComissaoPercentual,
+            CEP = f.CEP,
+            Logradouro = f.Logradouro,
+            Numero = f.Numero,
+            Bairro = f.Bairro,
+            Complemento = f.Complemento
         };
         mensagemErroModal = null;
         modalFormAberto = true;

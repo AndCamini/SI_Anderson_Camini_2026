@@ -6,7 +6,7 @@ namespace ProjetoSalaoDeBeleza.Models
     public class Funcionarios : Pessoas
     {
         [MaxLength(30)]
-        public string? Cargo { get; set; }
+        public string? Cargo { get; set; } // precisa ser tabela
 
         [Column(TypeName = "decimal(10,2)")]
         public decimal Salario { get; set; }

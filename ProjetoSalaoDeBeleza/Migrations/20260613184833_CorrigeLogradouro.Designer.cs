@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ProjetoSalaoDeBeleza.Data;
@@ -11,9 +12,11 @@ using ProjetoSalaoDeBeleza.Data;
 namespace ProjetoSalaoDeBeleza.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260613184833_CorrigeLogradouro")]
+    partial class CorrigeLogradouro
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -383,94 +386,6 @@ namespace ProjetoSalaoDeBeleza.Migrations
                     b.ToTable("Estados");
                 });
 
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Fornecedores", b =>
-                {
-                    b.Property<int>("CodFornecedor")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CodFornecedor"));
-
-                    b.Property<bool>("Ativo")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Bairro")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("CEP")
-                        .HasMaxLength(8)
-                        .HasColumnType("character varying(8)");
-
-                    b.Property<string>("CNPJ")
-                        .IsRequired()
-                        .HasMaxLength(14)
-                        .HasColumnType("character varying(14)");
-
-                    b.Property<int>("CodCidade")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Complemento")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("InscricaoEstadual")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<string>("NomeFantasia")
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<string>("Numero")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
-                    b.Property<string>("RazaoSocial")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<string>("Rua")
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<string>("Telefone")
-                        .HasMaxLength(15)
-                        .HasColumnType("character varying(15)");
-
-                    b.HasKey("CodFornecedor");
-
-                    b.HasIndex("CodCidade");
-
-                    b.ToTable("Fornecedores");
-                });
-
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.MarcasVeiculos", b =>
-                {
-                    b.Property<int>("CodMarca")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CodMarca"));
-
-                    b.Property<bool>("Ativo")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("MarcaVeiculo")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.HasKey("CodMarca");
-
-                    b.ToTable("MarcasVeiculos");
-                });
-
             modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Paises", b =>
                 {
                     b.Property<int>("CodPais")
@@ -621,140 +536,6 @@ namespace ProjetoSalaoDeBeleza.Migrations
                     b.HasIndex("CodCategoria");
 
                     b.ToTable("Produtos");
-                });
-
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.TiposVeiculos", b =>
-                {
-                    b.Property<int>("CodTipo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CodTipo"));
-
-                    b.Property<bool>("Ativo")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Tipo")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.HasKey("CodTipo");
-
-                    b.ToTable("TiposVeiculos");
-                });
-
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Transportadores", b =>
-                {
-                    b.Property<int>("CodTransportador")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CodTransportador"));
-
-                    b.Property<bool>("Ativo")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Bairro")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("CEP")
-                        .HasMaxLength(8)
-                        .HasColumnType("character varying(8)");
-
-                    b.Property<string>("CNPJ")
-                        .HasMaxLength(14)
-                        .HasColumnType("character varying(14)");
-
-                    b.Property<string>("CPF")
-                        .HasMaxLength(14)
-                        .HasColumnType("character varying(14)");
-
-                    b.Property<int>("CodCidade")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Complemento")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("Nome")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<string>("Numero")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
-                    b.Property<string>("Rua")
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<string>("Telefone")
-                        .HasMaxLength(15)
-                        .HasColumnType("character varying(15)");
-
-                    b.HasKey("CodTransportador");
-
-                    b.HasIndex("CodCidade");
-
-                    b.ToTable("Transportadores");
-                });
-
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Veiculos", b =>
-                {
-                    b.Property<int>("CodVeiculo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CodVeiculo"));
-
-                    b.Property<int>("Ano")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("Ativo")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("CodMarca")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("CodTipo")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("CodTransportador")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Cor")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("Modelo")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Placa")
-                        .IsRequired()
-                        .HasMaxLength(8)
-                        .HasColumnType("character varying(8)");
-
-                    b.Property<bool>("PlacaMercosul")
-                        .HasColumnType("boolean");
-
-                    b.HasKey("CodVeiculo");
-
-                    b.HasIndex("CodMarca");
-
-                    b.HasIndex("CodTipo");
-
-                    b.HasIndex("CodTransportador");
-
-                    b.ToTable("Veiculos");
                 });
 
             modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Clientes", b =>
@@ -936,17 +717,6 @@ namespace ProjetoSalaoDeBeleza.Migrations
                     b.Navigation("oPais");
                 });
 
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Fornecedores", b =>
-                {
-                    b.HasOne("ProjetoSalaoDeBeleza.Models.Cidades", "oCidade")
-                        .WithMany()
-                        .HasForeignKey("CodCidade")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("oCidade");
-                });
-
             modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Pessoas", b =>
                 {
                     b.HasOne("ProjetoSalaoDeBeleza.Models.Cidades", "oCidade")
@@ -969,44 +739,6 @@ namespace ProjetoSalaoDeBeleza.Migrations
                     b.Navigation("oCategoria");
                 });
 
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Transportadores", b =>
-                {
-                    b.HasOne("ProjetoSalaoDeBeleza.Models.Cidades", "oCidade")
-                        .WithMany()
-                        .HasForeignKey("CodCidade")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("oCidade");
-                });
-
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Veiculos", b =>
-                {
-                    b.HasOne("ProjetoSalaoDeBeleza.Models.MarcasVeiculos", "oMarca")
-                        .WithMany()
-                        .HasForeignKey("CodMarca")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ProjetoSalaoDeBeleza.Models.TiposVeiculos", "oTipo")
-                        .WithMany()
-                        .HasForeignKey("CodTipo")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ProjetoSalaoDeBeleza.Models.Transportadores", "oTransportador")
-                        .WithMany("Veiculos")
-                        .HasForeignKey("CodTransportador")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("oMarca");
-
-                    b.Navigation("oTipo");
-
-                    b.Navigation("oTransportador");
-                });
-
             modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Categorias", b =>
                 {
                     b.Navigation("Produtos");
@@ -1015,11 +747,6 @@ namespace ProjetoSalaoDeBeleza.Migrations
             modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.CondicaoPagamento", b =>
                 {
                     b.Navigation("Parcelas");
-                });
-
-            modelBuilder.Entity("ProjetoSalaoDeBeleza.Models.Transportadores", b =>
-                {
-                    b.Navigation("Veiculos");
                 });
 #pragma warning restore 612, 618
         }

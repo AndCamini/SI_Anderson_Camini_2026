@@ -67,7 +67,7 @@
                     <h5 class="modal-title">@(condicaoAtual.CodCondicao == 0 ? "Nova Condição de Pagamento" : "Editar Condição de Pagamento")</h5>
                     <button type="button" class="btn-close" @onclick="FecharModalForm"></button>
                 </div>
-                <EditForm Model="@condicaoAtual" OnValidSubmit="Salvar">
+                <EditForm Model="@condicaoAtual" OnValidSubmit="Salvar" FormName="formCondicoes">
                     <DataAnnotationsValidator />
                     <div class="modal-body">
                         @if (!string.IsNullOrEmpty(mensagemErroModal))

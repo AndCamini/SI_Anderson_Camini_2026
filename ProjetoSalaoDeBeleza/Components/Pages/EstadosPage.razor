@@ -61,40 +61,34 @@
                     <h5 class="modal-title">@(estadoAtual.CodEstado == 0 ? "Novo Estado" : "Editar Estado")</h5>
                     <button type="button" class="btn-close" @onclick="FecharModal"></button>
                 </div>
-                <EditForm Model="@estadoAtual" OnValidSubmit="Salvar">
-                    <DataAnnotationsValidator />
-                    <div class="modal-body">
-                        @if (!string.IsNullOrEmpty(mensagemErroModal))
-                        {
-                            <div class="alert alert-danger">@mensagemErroModal</div>
-                        }
-                        <div class="mb-3">
-                            <label class="form-label">Estado</label>
-                            <InputText @bind-Value="estadoAtual.Estado" class="form-control" />
-                            <ValidationMessage For="@(() => estadoAtual.Estado)" />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">UF</label>
-                            <InputText @bind-Value="estadoAtual.UF" class="form-control" style="max-width: 80px;" maxlength="2" />
-                            <ValidationMessage For="@(() => estadoAtual.UF)" />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">País</label>
-                            <InputSelect @bind-Value="estadoAtual.CodPais" class="form-select">
-                                <option value="0">Selecione...</option>
-                                @foreach (var pais in listaPaises)
-                                {
-                                    <option value="@pais.CodPais">@pais.Pais</option>
-                                }
-                            </InputSelect>
-                            <ValidationMessage For="@(() => estadoAtual.CodPais)" />
-                        </div>
+                <div class="modal-body">
+                    @if (!string.IsNullOrEmpty(mensagemErroModal))
+                    {
+                        <div class="alert alert-danger">@mensagemErroModal</div>
+                    }
+                    <div class="mb-3">
+                        <label class="form-label">Estado</label>
+                        <InputText @bind-Value="estadoAtual.Estado" class="form-control" />
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    <div class="mb-3">
+                        <label class="form-label">UF</label>
+                        <InputText @bind-Value="estadoAtual.UF" class="form-control" maxlength="2" style="max-width: 80px;" />
                     </div>
-                </EditForm>
+                    <div class="mb-3">
+                        <label class="form-label">País</label>
+                        <InputSelect @bind-Value="estadoAtual.CodPais" class="form-select">
+                            <option value="0">Selecione...</option>
+                            @foreach (var pais in listaPaises)
+                            {
+                                <option value="@pais.CodPais">@pais.Pais</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" @onclick="Salvar">Salvar</button>
+                </div>
             </div>
         </div>
     </div>
@@ -179,6 +173,23 @@
     private async Task Salvar()
     {
         LimparMensagens();
+
+        if (string.IsNullOrWhiteSpace(estadoAtual.Estado))
+        {
+            mensagemErroModal = "Estado é obrigatório.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(estadoAtual.UF))
+        {
+            mensagemErroModal = "UF é obrigatória.";
+            return;
+        }
+        if (estadoAtual.CodPais == 0)
+        {
+            mensagemErroModal = "Selecione um país.";
+            return;
+        }
+
         try
         {
             if (estadoAtual.CodEstado == 0)

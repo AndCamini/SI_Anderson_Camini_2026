@@ -115,6 +115,32 @@
                                 }
                             </InputSelect>
                         </div>
+                        <hr class="my-2" />
+                        <h6 class="mb-3">Endereço</h6>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">CEP</label>
+                                <InputText @bind-Value="clienteAtual.CEP" class="form-control" maxlength="8" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Rua</label>
+                                <InputText @bind-Value="clienteAtual.Logradouro" class="form-control" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Número</label>
+                                <InputText @bind-Value="clienteAtual.Numero" class="form-control" maxlength="10" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Bairro</label>
+                                <InputText @bind-Value="clienteAtual.Bairro" class="form-control" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Complemento</label>
+                                <InputText @bind-Value="clienteAtual.Complemento" class="form-control" />
+                            </div>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label">Observações</label>
                             <InputTextArea @bind-Value="clienteAtual.Observacoes" class="form-control" rows="3" />
@@ -223,7 +249,12 @@
             TotalGasto = c.TotalGasto,
             Observacoes = c.Observacoes,
             UltimaVisita = c.UltimaVisita,
-            RecebeNotificacoes = c.RecebeNotificacoes
+            RecebeNotificacoes = c.RecebeNotificacoes,
+            CEP = c.CEP,
+            Logradouro = c.Logradouro,
+            Numero = c.Numero,
+            Bairro = c.Bairro,
+            Complemento = c.Complemento
         };
         mensagemErroModal = null;
         modalFormAberto = true;
