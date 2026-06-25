@@ -20,7 +20,11 @@ namespace ProjetoSalaoDeBeleza.Services
         }
         public async Task UpdateCidadeAsync(Cidades cidade)
         {
-            _context.Cidades.Update(cidade);
+            var existente = await _context.Cidades.FindAsync(cidade.CodCidade);
+            if (existente == null) throw new Exception("Cidade não encontrada.");
+
+            existente.Cidade = cidade.Cidade;
+            existente.oEstado = cidade.oEstado;
             await _context.SaveChangesAsync();
         }
         public async Task DeleteCidadeAsync(int id)

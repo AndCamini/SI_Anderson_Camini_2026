@@ -15,6 +15,7 @@ namespace ProjetoSalaoDeBeleza.Services
 
         public async Task<List<Produtos>> GetProdutosAsync() =>
             await _context.Produtos
+                .AsNoTracking()
                 .Include(p => p.oCategoria)
                 .ToListAsync();
 

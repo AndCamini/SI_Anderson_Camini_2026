@@ -21,7 +21,12 @@ namespace ProjetoSalaoDeBeleza.Services
         }
         public async Task UpdateEstadoAsync(Estados estado)
         {
-            _context.Estados.Update(estado);
+            var existente = await _context.Estados.FindAsync(estado.CodPais);
+            if (existente == null) throw new Exception("Estado não encontrado.");
+
+            existente.Estado = estado.Estado;
+            existente.UF = estado.UF;
+            existente.oPais = estado.oPais;
             await _context.SaveChangesAsync();
         }
         public async Task DeleteEstadoAsync(int id)

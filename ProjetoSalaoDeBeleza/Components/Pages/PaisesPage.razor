@@ -46,7 +46,7 @@
                 <td>@p.Moeda</td>
                 <td>
                     <button class="btn btn-warning btn-sm" @onclick="() => AbrirModalEditar(p)">Editar</button>
-                    <button class="btn btn-danger btn-sm" @onclick="() => Excluir(p.CodPais)">Excluir</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => AbrirModalExcluir(p)">Excluir</button>
                 </td>
             </tr>
         }
@@ -62,41 +62,64 @@
                     <h5 class="modal-title">@(paisAtual.CodPais == 0 ? "Novo País" : "Editar País")</h5>
                     <button type="button" class="btn-close" @onclick="FecharModal"></button>
                 </div>
-                <EditForm Model="@paisAtual" OnValidSubmit="Salvar">
-                    <DataAnnotationsValidator />
-                    <div class="modal-body">
-                        @if (!string.IsNullOrEmpty(mensagemErroModal))
-                        {
-                            <div class="alert alert-danger">@mensagemErroModal</div>
-                        }
-                        <div class="mb-3">
-                            <label class="form-label">País</label>
-                            <InputText @bind-Value="paisAtual.Pais" class="form-control" />
-                            <ValidationMessage For="@(() => paisAtual.Pais)" />
+                <div class="modal-body">
+                    @if (!string.IsNullOrEmpty(mensagemErroModal))
+                    {
+                        <div class="alert alert-danger">@mensagemErroModal</div>
+                    }
+                    <div class="mb-3">
+                        <label class="form-label">País</label>
+                        <InputText @bind-Value="paisAtual.Pais" class="form-control" />
+                    </div>
+                    <div class="row">
+                        <div class="col-4 mb-3">
+                            <label class="form-label">Sigla</label>
+                            <InputText @bind-Value="paisAtual.Sigla" class="form-control" maxlength="3" />
                         </div>
-                        <div class="row">
-                            <div class="col-4 mb-3">
-                                <label class="form-label">Sigla</label>
-                                <InputText @bind-Value="paisAtual.Sigla" class="form-control" maxlength="3" />
-                                <ValidationMessage For="@(() => paisAtual.Sigla)" />
-                            </div>
-                            <div class="col-4 mb-3">
-                                <label class="form-label">DDI</label>
-                                <InputText @bind-Value="paisAtual.DDI" class="form-control" maxlength="5" />
-                                <ValidationMessage For="@(() => paisAtual.DDI)" />
-                            </div>
-                            <div class="col-4 mb-3">
-                                <label class="form-label">Moeda</label>
-                                <InputText @bind-Value="paisAtual.Moeda" class="form-control" maxlength="10" />
-                                <ValidationMessage For="@(() => paisAtual.Moeda)" />
-                            </div>
+                        <div class="col-4 mb-3">
+                            <label class="form-label">DDI</label>
+                            <InputText @bind-Value="paisAtual.DDI" class="form-control" maxlength="5" />
+                        </div>
+                        <div class="col-4 mb-3">
+                            <label class="form-label">Moeda</label>
+                            <InputText @bind-Value="paisAtual.Moeda" class="form-control" maxlength="10" />
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar</button>
-                    </div>
-                </EditForm>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" @onclick="Salvar">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (modalExcluirAberto && paisExcluir != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModalExcluir"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger fw-bold">Tem certeza que deseja excluir este país? Esta ação não pode ser desfeita.</p>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr><th>Código</th><td>@paisExcluir.CodPais</td></tr>
+                            <tr><th>País</th><td>@paisExcluir.Pais</td></tr>
+                            <tr><th>Sigla</th><td>@paisExcluir.Sigla</td></tr>
+                            <tr><th>DDI</th><td>@paisExcluir.DDI</td></tr>
+                            <tr><th>Moeda</th><td>@paisExcluir.Moeda</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModalExcluir">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmarExclusao">Excluir</button>
+                </div>
             </div>
         </div>
     </div>
@@ -109,6 +132,7 @@
     private string? mensagemErro;
     private string? mensagemSucesso;
     private string? mensagemErroModal;
+    private EditContext editContext = default!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -123,6 +147,7 @@
     private void AbrirModalNovo()
     {
         paisAtual = new Paises();
+        editContext = new EditContext(paisAtual);
         mensagemErroModal = null;
         modalAberto = true;
     }
@@ -137,6 +162,7 @@
             DDI = p.DDI,
             Moeda = p.Moeda
         };
+        editContext = new EditContext(paisAtual);
         mensagemErroModal = null;
         modalAberto = true;
     }
@@ -151,6 +177,28 @@
     private async Task Salvar()
     {
         LimparMensagens();
+
+        if (string.IsNullOrWhiteSpace(paisAtual.Pais))
+        {
+            mensagemErroModal = "País é obrigatório.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(paisAtual.Sigla))
+        {
+            mensagemErroModal = "Sigla é obrigatória.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(paisAtual.DDI))
+        {
+            mensagemErroModal = "DDI é obrigatório.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(paisAtual.Moeda))
+        {
+            mensagemErroModal = "Moeda é obrigatória.";
+            return;
+        }
+
         try
         {
             if (paisAtual.CodPais == 0)
@@ -168,18 +216,36 @@
         }
     }
 
-    private async Task Excluir(int id)
+    private Paises? paisExcluir;
+    private bool modalExcluirAberto = false;
+
+    private void AbrirModalExcluir(Paises p)
     {
+        paisExcluir = p;
+        modalExcluirAberto = true;
+    }
+
+    private void FecharModalExcluir()
+    {
+        modalExcluirAberto = false;
+        paisExcluir = null;
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (paisExcluir == null) return;
         LimparMensagens();
         try
         {
-            await paisesService.DeletePaisAsync(id);
+            await paisesService.DeletePaisAsync(paisExcluir.CodPais);
             mensagemSucesso = "País excluído com sucesso.";
+            FecharModalExcluir();
             await CarregarPaises();
         }
         catch (Exception ex)
         {
             mensagemErro = ex.Message;
+            FecharModalExcluir();
         }
     }
 

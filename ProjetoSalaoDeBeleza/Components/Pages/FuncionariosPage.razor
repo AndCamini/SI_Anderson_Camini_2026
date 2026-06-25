@@ -3,114 +3,234 @@
 @using ProjetoSalaoDeBeleza.Models
 @using ProjetoSalaoDeBeleza.Services
 @inject FuncionariosService funcionariosService
+@inject CidadesService cidadesService
 
-<h3>Cadastro de Funcionários</h3>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Funcionários</h3>
+    <button class="btn btn-primary" @onclick="AbrirModalNovo">+ Cadastrar novo</button>
+</div>
 
-<EditForm Model="@funcionarioAtual" OnValidSubmit="Salvar" FormName="formFuncionarios">
-    <div class="mb-2">
-        <label>Nome:</label>
-        <InputText @bind-Value="funcionarioAtual.Nome" class="form-control" />
+@if (!string.IsNullOrEmpty(mensagemErro))
+{
+    <div class="alert alert-danger alert-dismissible">
+        @mensagemErro
+        <button type="button" class="btn-close" @onclick="LimparMensagens"></button>
     </div>
-    <div class="mb-2">
-        <label>CPF:</label>
-        <InputText @bind-Value="funcionarioAtual.CPF" class="form-control" />
+}
+@if (!string.IsNullOrEmpty(mensagemSucesso))
+{
+    <div class="alert alert-success alert-dismissible">
+        @mensagemSucesso
+        <button type="button" class="btn-close" @onclick="LimparMensagens"></button>
     </div>
-    <div class="mb-2">
-        <label>Email:</label>
-        <InputText @bind-Value="funcionarioAtual.Email" class="form-control" />
-    </div>
-    <div class="mb-2">
-        <label>Telefone:</label>
-        <InputText @bind-Value="funcionarioAtual.Telefone" class="form-control" />
-    </div>
-    <div class="mb-2">
-        <label>Data de Nascimento:</label>
-        <InputDate @bind-Value="funcionarioAtual.DataNascimento" class="form-control" />
-    </div>
-    <div class="mb-2">
-        <label>Cidade:</label>
-        <InputNumber @bind-Value="funcionarioAtual.CodCidade" class="form-control" />
-    </div>
-    <div class="mb-2">
-        <label>Cargo:</label>
-        <InputText @bind-Value="funcionarioAtual.Cargo" class="form-control" />
-    </div>
-    <div class="mb-2">
-        <label>Salário:</label>
-        <InputNumber @bind-Value="funcionarioAtual.Salario" class="form-control" />
-    </div>
-    <div class="mb-2">
-        <label>Data de Admissão:</label>
-        <InputDate @bind-Value="funcionarioAtual.DataAdmissao" class="form-control" />
-    </div>
-    <div class="mb-2">
-        <label>Data de Demissão:</label>
-        <InputDate @bind-Value="funcionarioAtual.DataDemissao" class="form-control" />
-    </div>
-    <div class="mb-2">
-        <label>Comissão Percentual:</label>
-        <InputNumber @bind-Value="funcionarioAtual.ComissaoPercentual" class="form-control" />
-    </div>
-    <div class="mb-2 form-check">
-        <InputCheckbox @bind-Value="funcionarioAtual.Ativo" class="form-check-input" />
-        <label class="form-check-label">Ativo</label>
-    </div>
-    <button type="submit" class="btn btn-primary mt-2">Salvar</button>
-    <button type="button" class="btn btn-secondary mt-2" @onclick="Cancelar">Cancelar</button>
-</EditForm>
+}
 
-<hr />
-
-<table class="table">
-    <thead>
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
         <tr>
             <th>Cód</th>
             <th>Nome</th>
             <th>CPF</th>
-            <th>Email</th>
-            <th>Telefone</th>
-            <th>Data Nascimento</th>
-            <th>Cidade</th>
             <th>Cargo</th>
             <th>Salário</th>
-            <th>DataAdmissao</th>
-            <th>DataDemissao</th>
-            <th>ComissaoPercentual</th>
+            <th>Admissão</th>
+            <th>Cidade</th>
+            <th>Ativo</th>
+            <th>Ações</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var c in listaFuncionarios)
+        @foreach (var f in listaFuncionarios)
         {
             <tr>
-                <td>@c.CodPessoa</td>
-                <td>@c.Nome</td>
-                <td>@c.CPF</td>
-                <td>@c.Email</td>
-                <td>@c.Telefone</td>
-                <td>@c.DataNascimento.ToString("dd/MM/yyyy")</td>
-                <td>@c.oCidade?.Cidade</td>
-                <td>@c.Cargo</td>
-                <td>@c.Salario</td>
-                <td>@c.DataAdmissao.ToString("dd/MM/yyyy")</td>
-                <td>@c.DataDemissao?.ToString("dd/MM/yyyy")</td>
-                <td>@c.ComissaoPercentual.ToString("P2")</td>
+                <td>@f.CodPessoa</td>
+                <td>@f.Nome</td>
+                <td>@f.CPF</td>
+                <td>@f.Cargo</td>
+                <td>@f.Salario.ToString("C2")</td>
+                <td>@f.DataAdmissao.ToString("dd/MM/yyyy")</td>
+                <td>@f.oCidade?.Cidade</td>
+                <td>@(f.Ativo ? "Sim" : "Não")</td>
                 <td>
-                    <button class="btn btn-warning btn-sm" @onclick="() => Editar(c)">Editar</button>
-                    <button class="btn btn-danger btn-sm" @onclick="() => Excluir(c.CodPessoa)">Excluir</button>
+                    <button class="btn btn-warning btn-sm" @onclick="() => AbrirModalEditar(f)">Editar</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => AbrirModalExcluir(f)">Excluir</button>
                 </td>
             </tr>
         }
     </tbody>
 </table>
 
+@* Modal Cadastro/Edição *@
+@if (modalFormAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(funcionarioAtual.CodPessoa == 0 ? "Novo Funcionário" : "Editar Funcionário")</h5>
+                    <button type="button" class="btn-close" @onclick="FecharModalForm"></button>
+                </div>
+                <EditForm Model="@funcionarioAtual" OnValidSubmit="Salvar" FormName="formFuncionarios">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        @if (!string.IsNullOrEmpty(mensagemErroModal))
+                        {
+                            <div class="alert alert-danger">@mensagemErroModal</div>
+                        }
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label">Nome</label>
+                                <InputText @bind-Value="funcionarioAtual.Nome" class="form-control" />
+                                <ValidationMessage For="@(() => funcionarioAtual.Nome)" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">CPF</label>
+                                <InputText @bind-Value="funcionarioAtual.CPF" class="form-control" maxlength="11" />
+                                <ValidationMessage For="@(() => funcionarioAtual.CPF)" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <InputText @bind-Value="funcionarioAtual.Email" class="form-control" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Telefone</label>
+                                <InputText @bind-Value="funcionarioAtual.Telefone" class="form-control" maxlength="15" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Data de Nascimento</label>
+                                <InputDate @bind-Value="funcionarioAtual.DataNascimento" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Cidade</label>
+                                <InputSelect @bind-Value="funcionarioAtual.CodCidade" class="form-select">
+                                    <option value="0">Selecione...</option>
+                                    @foreach (var cidade in listaCidades)
+                                    {
+                                        <option value="@cidade.CodCidade">@cidade.Cidade</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Cargo</label>
+                                <InputText @bind-Value="funcionarioAtual.Cargo" class="form-control" maxlength="30" />
+                            </div>
+                            <hr class="my-2" />
+                            <h6 class="mb-3">Endereço</h6>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">CEP</label>
+                                    <InputText @bind-Value="funcionarioAtual.CEP" class="form-control" maxlength="8" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Logradouro</label>
+                                    <InputText @bind-Value="funcionarioAtual.Logradouro" class="form-control" />
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Número</label>
+                                    <InputText @bind-Value="funcionarioAtual.Numero" class="form-control" maxlength="10" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Bairro</label>
+                                    <InputText @bind-Value="funcionarioAtual.Bairro" class="form-control" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Complemento</label>
+                                    <InputText @bind-Value="funcionarioAtual.Complemento" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Salário</label>
+                                <InputNumber @bind-Value="funcionarioAtual.Salario" class="form-control" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Comissão (%)</label>
+                                <InputNumber @bind-Value="funcionarioAtual.ComissaoPercentual" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Data de Admissão</label>
+                                <InputDate @bind-Value="funcionarioAtual.DataAdmissao" class="form-control" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Data de Demissão</label>
+                                <InputDate @bind-Value="funcionarioAtual.DataDemissao" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <InputCheckbox @bind-Value="funcionarioAtual.Ativo" class="form-check-input" id="ativoCheckFunc" />
+                            <label class="form-check-label" for="ativoCheckFunc">Ativo</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="FecharModalForm">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@* Modal Confirmação de Exclusão *@
+@if (modalExcluirAberto && funcionarioExcluir != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModalExcluir"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger fw-bold">Tem certeza que deseja excluir este funcionário? Esta ação não pode ser desfeita.</p>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr><th>Código</th><td>@funcionarioExcluir.CodPessoa</td></tr>
+                            <tr><th>Nome</th><td>@funcionarioExcluir.Nome</td></tr>
+                            <tr><th>CPF</th><td>@funcionarioExcluir.CPF</td></tr>
+                            <tr><th>Email</th><td>@funcionarioExcluir.Email</td></tr>
+                            <tr><th>Cargo</th><td>@funcionarioExcluir.Cargo</td></tr>
+                            <tr><th>Salário</th><td>@funcionarioExcluir.Salario.ToString("C2")</td></tr>
+                            <tr><th>Admissão</th><td>@funcionarioExcluir.DataAdmissao.ToString("dd/MM/yyyy")</td></tr>
+                            <tr><th>Demissão</th><td>@(funcionarioExcluir.DataDemissao?.ToString("dd/MM/yyyy") ?? "—")</td></tr>
+                            <tr><th>Comissão</th><td>@funcionarioExcluir.ComissaoPercentual.ToString("P2")</td></tr>
+                            <tr><th>Cidade</th><td>@funcionarioExcluir.oCidade?.Cidade</td></tr>
+                            <tr><th>Ativo</th><td>@(funcionarioExcluir.Ativo ? "Sim" : "Não")</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModalExcluir">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmarExclusao">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<Funcionarios> listaFuncionarios = new();
-
-    [SupplyParameterFromForm]
-    private Funcionarios funcionarioAtual { get; set; } = new();
+    private List<Cidades> listaCidades = new();
+    private Funcionarios funcionarioAtual = new();
+    private Funcionarios? funcionarioExcluir;
+    private bool modalFormAberto = false;
+    private bool modalExcluirAberto = false;
+    private string? mensagemErro;
+    private string? mensagemSucesso;
+    private string? mensagemErroModal;
 
     protected override async Task OnInitializedAsync()
     {
+        listaCidades = await cidadesService.GetCidadesAsync();
         await CarregarFuncionarios();
     }
 
@@ -119,49 +239,101 @@
         listaFuncionarios = await funcionariosService.GetFuncionariosAsync();
     }
 
-    private async Task Salvar()
+    private void AbrirModalNovo()
     {
-        if (funcionarioAtual.CodPessoa == 0)
-        {
-            await funcionariosService.AddFuncionarioAsync(funcionarioAtual);
-        }
-        else
-        {
-            await funcionariosService.UpdateFuncionarioAsync(funcionarioAtual);
-        }
         funcionarioAtual = new Funcionarios();
-        await CarregarFuncionarios();
+        mensagemErroModal = null;
+        modalFormAberto = true;
     }
 
-    private void Editar(Funcionarios c)
+    private void AbrirModalEditar(Funcionarios f)
     {
         funcionarioAtual = new Funcionarios
         {
-            CodPessoa = c.CodPessoa,
-            Nome = c.Nome,
-            CPF = c.CPF,
-            Email = c.Email,
-            Telefone = c.Telefone,
-            DataNascimento = c.DataNascimento,
-            Cargo = c.Cargo,
-            Salario = c.Salario,
-            DataAdmissao = c.DataAdmissao,
-            DataDemissao = c.DataDemissao,
-            ComissaoPercentual = c.ComissaoPercentual,
-            Ativo = c.Ativo,
-            CodCidade = c.CodCidade,
-            
+            CodPessoa = f.CodPessoa,
+            Nome = f.Nome,
+            CPF = f.CPF,
+            Email = f.Email,
+            Telefone = f.Telefone,
+            DataNascimento = f.DataNascimento,
+            DataCadastro = f.DataCadastro,
+            Ativo = f.Ativo,
+            CodCidade = f.CodCidade,
+            Cargo = f.Cargo,
+            Salario = f.Salario,
+            DataAdmissao = f.DataAdmissao,
+            DataDemissao = f.DataDemissao,
+            ComissaoPercentual = f.ComissaoPercentual,
+            CEP = f.CEP,
+            Logradouro = f.Logradouro,
+            Numero = f.Numero,
+            Bairro = f.Bairro,
+            Complemento = f.Complemento
         };
+        mensagemErroModal = null;
+        modalFormAberto = true;
     }
 
-    private async Task Excluir(int id)
+    private void FecharModalForm()
     {
-        await funcionariosService.DeleteFuncionarioAsync(id);
-        await CarregarFuncionarios();
-    }
-
-    private void Cancelar()
-    {
+        modalFormAberto = false;
         funcionarioAtual = new Funcionarios();
+        mensagemErroModal = null;
+    }
+
+    private void AbrirModalExcluir(Funcionarios f)
+    {
+        funcionarioExcluir = f;
+        modalExcluirAberto = true;
+    }
+
+    private void FecharModalExcluir()
+    {
+        modalExcluirAberto = false;
+        funcionarioExcluir = null;
+    }
+
+    private async Task Salvar()
+    {
+        LimparMensagens();
+        try
+        {
+            if (funcionarioAtual.CodPessoa == 0)
+                await funcionariosService.AddFuncionarioAsync(funcionarioAtual);
+            else
+                await funcionariosService.UpdateFuncionarioAsync(funcionarioAtual);
+
+            mensagemSucesso = "Funcionário salvo com sucesso.";
+            FecharModalForm();
+            await CarregarFuncionarios();
+        }
+        catch (Exception ex)
+        {
+            mensagemErroModal = ex.Message;
+        }
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (funcionarioExcluir == null) return;
+        LimparMensagens();
+        try
+        {
+            await funcionariosService.DeleteFuncionarioAsync(funcionarioExcluir.CodPessoa);
+            mensagemSucesso = "Funcionário excluído com sucesso.";
+            FecharModalExcluir();
+            await CarregarFuncionarios();
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = ex.Message;
+            FecharModalExcluir();
+        }
+    }
+
+    private void LimparMensagens()
+    {
+        mensagemErro = null;
+        mensagemSucesso = null;
     }
 }

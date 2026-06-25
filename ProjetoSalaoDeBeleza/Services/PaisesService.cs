@@ -25,7 +25,14 @@ namespace ProjetoSalaoDeBeleza.Services
 
         public async Task UpdatePaisAsync(Paises pais)
         {
-            _context.Paises.Update(pais);
+            var existente = await _context.Paises.FindAsync(pais.CodPais);
+            if (existente == null) throw new Exception("País não encontrado.");
+
+            existente.Pais = pais.Pais;
+            existente.Sigla = pais.Sigla;
+            existente.DDI = pais.DDI;
+            existente.Moeda = pais.Moeda;
+
             await _context.SaveChangesAsync();
         }
 

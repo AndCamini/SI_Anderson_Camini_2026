@@ -17,10 +17,24 @@
             [MaxLength(15)]
             public string? Telefone { get; set; }
             public DateTime DataNascimento { get; set; }
+
+            [MaxLength(8)]
+            public string? CEP { get; set; }
+
+            [MaxLength(35)]
+            public string? Logradouro { get; set; }
+
+            [MaxLength(10)]
+            public string? Numero { get; set; }
+
+            [MaxLength(100)]
+            public string? Complemento { get; set; }
+
+            [MaxLength(20)]
+            public string? Bairro { get; set; }
             public DateTime DataCadastro { get; set; } = DateTime.UtcNow;
             public bool Ativo { get; set; } = true;
             public Cidades oCidade { get; set; }
             public int CodCidade { get; set; }
         }
     }
-// adicionar endereço completo (não só a cidade)

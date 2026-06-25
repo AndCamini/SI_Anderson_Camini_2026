@@ -8,7 +8,8 @@ using ProjetoSalaoDeBeleza.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddRazorComponents()
+builder.Services.AddRazorComponents(options =>
+    options.DetailedErrors = true)
     .AddInteractiveServerComponents();
 
 builder.Services.AddCascadingAuthenticationState();
@@ -45,6 +46,11 @@ builder.Services.AddScoped<FuncionariosService>();
 builder.Services.AddScoped<CondicaoPagamentoService>();
 builder.Services.AddScoped<CategoriasService>();
 builder.Services.AddScoped<ProdutosService>();
+builder.Services.AddScoped<FornecedoresService>();
+builder.Services.AddScoped<TransportadoresService>();
+builder.Services.AddScoped<VeiculosService>();
+builder.Services.AddScoped<MarcasVeiculosService>();
+builder.Services.AddScoped<TiposVeiculoService>();
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 

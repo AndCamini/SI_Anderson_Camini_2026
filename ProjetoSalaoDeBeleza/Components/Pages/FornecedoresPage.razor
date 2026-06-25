@@ -1,0 +1,310 @@
+﻿@page "/fornecedores"
+@rendermode InteractiveServer
+@using ProjetoSalaoDeBeleza.Models
+@using ProjetoSalaoDeBeleza.Services
+@inject FornecedoresService fornecedoresService
+@inject CidadesService cidadesService
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Fornecedores</h3>
+    <button class="btn btn-primary" @onclick="AbrirModalNovo">+ Cadastrar novo</button>
+</div>
+
+@if (!string.IsNullOrEmpty(mensagemErro))
+{
+    <div class="alert alert-danger alert-dismissible">
+        @mensagemErro
+        <button type="button" class="btn-close" @onclick="LimparMensagens"></button>
+    </div>
+}
+@if (!string.IsNullOrEmpty(mensagemSucesso))
+{
+    <div class="alert alert-success alert-dismissible">
+        @mensagemSucesso
+        <button type="button" class="btn-close" @onclick="LimparMensagens"></button>
+    </div>
+}
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Cód</th>
+            <th>Razão Social</th>
+            <th>Nome Fantasia</th>
+            <th>CNPJ</th>
+            <th>Email</th>
+            <th>Telefone</th>
+            <th>Cidade</th>
+            <th>Ativo</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var f in listaFornecedores)
+        {
+            <tr>
+                <td>@f.CodFornecedor</td>
+                <td>@f.RazaoSocial</td>
+                <td>@f.NomeFantasia</td>
+                <td>@f.CNPJ</td>
+                <td>@f.Email</td>
+                <td>@f.Telefone</td>
+                <td>@f.oCidade?.Cidade</td>
+                <td>@(f.Ativo ? "Sim" : "Não")</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" @onclick="() => AbrirModalEditar(f)">Editar</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => AbrirModalExcluir(f)">Excluir</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@* Modal Cadastro/Edição *@
+@if (modalFormAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(fornecedorAtual.CodFornecedor == 0 ? "Novo Fornecedor" : "Editar Fornecedor")</h5>
+                    <button type="button" class="btn-close" @onclick="FecharModalForm"></button>
+                </div>
+                <EditForm Model="@fornecedorAtual" OnValidSubmit="Salvar" FormName="formFornecedores">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        @if (!string.IsNullOrEmpty(mensagemErroModal))
+                        {
+                            <div class="alert alert-danger">@mensagemErroModal</div>
+                        }
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label">Razão Social</label>
+                                <InputText @bind-Value="fornecedorAtual.RazaoSocial" class="form-control" />
+                                <ValidationMessage For="@(() => fornecedorAtual.RazaoSocial)" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">CNPJ</label>
+                                <InputText @bind-Value="fornecedorAtual.CNPJ" class="form-control" maxlength="14" />
+                                <ValidationMessage For="@(() => fornecedorAtual.CNPJ)" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nome Fantasia</label>
+                                <InputText @bind-Value="fornecedorAtual.NomeFantasia" class="form-control" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Inscrição Estadual</label>
+                                <InputText @bind-Value="fornecedorAtual.InscricaoEstadual" class="form-control" maxlength="20" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <InputText @bind-Value="fornecedorAtual.Email" class="form-control" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Telefone</label>
+                                <InputText @bind-Value="fornecedorAtual.Telefone" class="form-control" maxlength="15" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">CEP</label>
+                                <InputText @bind-Value="fornecedorAtual.CEP" class="form-control" maxlength="8" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Rua</label>
+                                <InputText @bind-Value="fornecedorAtual.Rua" class="form-control" />
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">Número</label>
+                                <InputText @bind-Value="fornecedorAtual.Numero" class="form-control" maxlength="10" />
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Complemento</label>
+                                <InputText @bind-Value="fornecedorAtual.Complemento" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Bairro</label>
+                                <InputText @bind-Value="fornecedorAtual.Bairro" class="form-control" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Cidade</label>
+                                <InputSelect @bind-Value="fornecedorAtual.CodCidade" class="form-select">
+                                    <option value="0">Selecione...</option>
+                                    @foreach (var cidade in listaCidades)
+                                    {
+                                        <option value="@cidade.CodCidade">@cidade.Cidade</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <InputCheckbox @bind-Value="fornecedorAtual.Ativo" class="form-check-input" id="ativoCheckForn" />
+                            <label class="form-check-label" for="ativoCheckForn">Ativo</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="FecharModalForm">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@* Modal Confirmação de Exclusão *@
+@if (modalExcluirAberto && fornecedorExcluir != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModalExcluir"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger fw-bold">Tem certeza que deseja excluir este fornecedor? Esta ação não pode ser desfeita.</p>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr><th>Código</th><td>@fornecedorExcluir.CodFornecedor</td></tr>
+                            <tr><th>Razão Social</th><td>@fornecedorExcluir.RazaoSocial</td></tr>
+                            <tr><th>Nome Fantasia</th><td>@fornecedorExcluir.NomeFantasia</td></tr>
+                            <tr><th>CNPJ</th><td>@fornecedorExcluir.CNPJ</td></tr>
+                            <tr><th>Inscrição Estadual</th><td>@fornecedorExcluir.InscricaoEstadual</td></tr>
+                            <tr><th>Email</th><td>@fornecedorExcluir.Email</td></tr>
+                            <tr><th>Telefone</th><td>@fornecedorExcluir.Telefone</td></tr>
+                            <tr><th>Cidade</th><td>@fornecedorExcluir.oCidade?.Cidade</td></tr>
+                            <tr><th>Ativo</th><td>@(fornecedorExcluir.Ativo ? "Sim" : "Não")</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModalExcluir">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmarExclusao">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Fornecedores> listaFornecedores = new();
+    private List<Cidades> listaCidades = new();
+    private Fornecedores fornecedorAtual = new();
+    private Fornecedores? fornecedorExcluir;
+    private bool modalFormAberto = false;
+    private bool modalExcluirAberto = false;
+    private string? mensagemErro;
+    private string? mensagemSucesso;
+    private string? mensagemErroModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaCidades = await cidadesService.GetCidadesAsync();
+        await CarregarFornecedores();
+    }
+
+    private async Task CarregarFornecedores()
+    {
+        listaFornecedores = await fornecedoresService.GetFornecedoresAsync();
+    }
+
+    private void AbrirModalNovo()
+    {
+        fornecedorAtual = new Fornecedores();
+        mensagemErroModal = null;
+        modalFormAberto = true;
+    }
+
+    private void AbrirModalEditar(Fornecedores f)
+    {
+        fornecedorAtual = new Fornecedores
+        {
+            CodFornecedor = f.CodFornecedor,
+            RazaoSocial = f.RazaoSocial,
+            NomeFantasia = f.NomeFantasia,
+            CNPJ = f.CNPJ,
+            InscricaoEstadual = f.InscricaoEstadual,
+            Email = f.Email,
+            Telefone = f.Telefone,
+            CEP = f.CEP,
+            Rua = f.Rua,
+            Numero = f.Numero,
+            Complemento = f.Complemento,
+            Bairro = f.Bairro,
+            CodCidade = f.CodCidade,
+            Ativo = f.Ativo
+        };
+        mensagemErroModal = null;
+        modalFormAberto = true;
+    }
+
+    private void FecharModalForm()
+    {
+        modalFormAberto = false;
+        fornecedorAtual = new Fornecedores();
+        mensagemErroModal = null;
+    }
+
+    private void AbrirModalExcluir(Fornecedores f)
+    {
+        fornecedorExcluir = f;
+        modalExcluirAberto = true;
+    }
+
+    private void FecharModalExcluir()
+    {
+        modalExcluirAberto = false;
+        fornecedorExcluir = null;
+    }
+
+    private async Task Salvar()
+    {
+        LimparMensagens();
+        try
+        {
+            if (fornecedorAtual.CodFornecedor == 0)
+                await fornecedoresService.AddFornecedorAsync(fornecedorAtual);
+            else
+                await fornecedoresService.UpdateFornecedorAsync(fornecedorAtual);
+
+            mensagemSucesso = "Fornecedor salvo com sucesso.";
+            FecharModalForm();
+            await CarregarFornecedores();
+        }
+        catch (Exception ex)
+        {
+            mensagemErroModal = ex.Message;
+        }
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (fornecedorExcluir == null) return;
+        LimparMensagens();
+        try
+        {
+            await fornecedoresService.DeleteFornecedorAsync(fornecedorExcluir.CodFornecedor);
+            mensagemSucesso = "Fornecedor excluído com sucesso.";
+            FecharModalExcluir();
+            await CarregarFornecedores();
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = ex.Message;
+            FecharModalExcluir();
+        }
+    }
+
+    private void LimparMensagens()
+    {
+        mensagemErro = null;
+        mensagemSucesso = null;
+    }
+}
