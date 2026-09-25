@@ -52,6 +52,7 @@ builder.Services.AddScoped<VeiculosService>();
 builder.Services.AddScoped<MarcasVeiculosService>();
 builder.Services.AddScoped<TiposVeiculoService>();
 builder.Services.AddScoped<FormasPagamentoService>();
+builder.Services.AddScoped<ComprasService>();
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 

@@ -1,0 +1,514 @@
+﻿@page "/compras"
+@rendermode InteractiveServer
+@using ProjetoSalaoDeBeleza.Models
+@using ProjetoSalaoDeBeleza.Services
+@inject ComprasService comprasService
+@inject FornecedoresService fornecedoresService
+@inject TransportadoresService transportadoresService
+@inject ProdutosService produtosService
+@inject CondicaoPagamentoService condicaoPagamentoService
+@inject FormasPagamentoService formasPagamentoService
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">Compras</h3>
+    <button class="btn btn-primary" @onclick="AbrirModalNovo">
+        <i class="bi bi-plus-lg me-1"></i> Nova compra
+    </button>
+</div>
+
+@if (!string.IsNullOrEmpty(mensagemErro))
+{
+    <div class="alert alert-danger alert-dismissible">
+        @mensagemErro
+        <button type="button" class="btn-close" @onclick="LimparMensagens"></button>
+    </div>
+}
+@if (!string.IsNullOrEmpty(mensagemSucesso))
+{
+    <div class="alert alert-success alert-dismissible">
+        @mensagemSucesso
+        <button type="button" class="btn-close" @onclick="LimparMensagens"></button>
+    </div>
+}
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Cód</th>
+                    <th>Nota</th>
+                    <th>Fornecedor</th>
+                    <th>Emissão</th>
+                    <th>Chegada</th>
+                    <th>Transportadora</th>
+                    <th class="text-end">Total</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!listaCompras.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">Nenhuma compra cadastrada.</td>
+                    </tr>
+                }
+                @foreach (var c in listaCompras)
+                {
+                    <tr>
+                        <td>@c.CodCompra</td>
+                        <td><span class="badge bg-secondary">@c.Modelo/@c.Serie/@c.NumeroNota</span></td>
+                        <td>@c.oFornecedor?.RazaoSocial</td>
+                        <td>@c.DataEmissao.ToString("dd/MM/yyyy")</td>
+                        <td>@c.DataChegada.ToString("dd/MM/yyyy")</td>
+                        <td>@(c.oTransportador?.Nome ?? "—")</td>
+                        <td class="text-end fw-semibold">
+                            @((c.Itens.Sum(i => i.Quantidade * i.PrecoUnitario - i.Desconto) + c.Frete + c.Seguro + c.OutrasDespesas).ToString("C2"))
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" @onclick="() => AbrirModalExcluir(c)">Excluir</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@* Modal Nova Compra *@
+@if (modalFormAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.6)">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-cart-plus me-2"></i>Nova Nota de Entrada</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModalForm"></button>
+                </div>
+                <div class="modal-body bg-light">
+
+                    @if (!string.IsNullOrEmpty(mensagemErroModal))
+                    {
+                        <div class="alert alert-danger">@mensagemErroModal</div>
+                    }
+
+                    
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-white fw-semibold">Dados da nota</div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-6 col-md-2">
+                                    <label class="form-label">Modelo</label>
+                                    <input class="form-control" @bind="compraAtual.Modelo" />
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    <label class="form-label">Série</label>
+                                    <input class="form-control" @bind="compraAtual.Serie" />
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    <label class="form-label">Número</label>
+                                    <input class="form-control" type="number" @bind="compraAtual.NumeroNota" />
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label">Fornecedor</label>
+                                    <InputSelect @bind-Value="compraAtual.CodFornecedor" class="form-select">
+                                        <option value="0">Selecione...</option>
+                                        @foreach (var f in listaFornecedores)
+                                        {
+                                            <option value="@f.CodFornecedor">@f.RazaoSocial</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label">Data de emissão</label>
+                                    <InputDate @bind-Value="compraAtual.DataEmissao" class="form-control" />
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label">Data de chegada</label>
+                                    <InputDate @bind-Value="compraAtual.DataChegada" class="form-control" />
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label">Transportadora</label>
+                                    <InputSelect @bind-Value="compraAtual.CodTransportador" class="form-select">
+                                        <option value="">Sem transportadora</option>
+                                        @foreach (var t in listaTransportadores)
+                                        {
+                                            <option value="@t.CodTransportador">@t.Nome</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">Produtos</span>
+                            <button type="button" class="btn btn-sm btn-primary" @onclick="AdicionarItem">
+                                <i class="bi bi-plus-lg me-1"></i>Adicionar produto
+                            </button>
+                        </div>
+                        <div class="card-body p-0">
+                            @if (!compraAtual.Itens.Any())
+                            {
+                                <div class="text-center text-muted py-4">Nenhum produto adicionado.</div>
+                            }
+                            else
+                            {
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width:38%">Produto</th>
+                                            <th style="width:12%">Quantidade</th>
+                                            <th style="width:16%">Preço unitário</th>
+                                            <th style="width:16%">Desconto</th>
+                                            <th style="width:14%" class="text-end">Total</th>
+                                            <th style="width:4%"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in compraAtual.Itens)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <InputSelect @bind-Value="item.CodProduto" class="form-select form-select-sm">
+                                                        <option value="0">Selecione...</option>
+                                                        @foreach (var p in listaProdutos)
+                                                        {
+                                                            <option value="@p.CodProduto">@p.Produto</option>
+                                                        }
+                                                    </InputSelect>
+                                                </td>
+                                                <td>
+                                                    <InputNumber @bind-Value="item.Quantidade" class="form-control form-control-sm"
+                                                                 @oninput="RecalcularTotais" />
+                                                </td>
+                                                <td>
+                                                    <InputNumber @bind-Value="item.PrecoUnitario" class="form-control form-control-sm"
+                                                                 @oninput="RecalcularTotais" />
+                                                </td>
+                                                <td>
+                                                    <InputNumber @bind-Value="item.Desconto" class="form-control form-control-sm"
+                                                                 @oninput="RecalcularTotais" />
+                                                </td>
+                                                <td class="text-end fw-semibold">
+                                                    @(Math.Max(item.Quantidade * item.PrecoUnitario - item.Desconto, 0).ToString("C2"))
+                                                </td>
+                                                <td class="text-end">
+                                                    <button type="button" class="btn btn-link text-danger p-0"
+                                                            @onclick="() => RemoverItem(item)">
+                                                        ✕
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        {{-- Custos e totais --}}
+                        <div class="col-12 col-lg-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-white fw-semibold">Custos e totais</div>
+                                <div class="card-body">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-4">
+                                            <label class="form-label">Frete</label>
+                                            <InputNumber @bind-Value="compraAtual.Frete" class="form-control"
+                                                         @oninput="RecalcularTotais" />
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="form-label">Seguro</label>
+                                            <InputNumber @bind-Value="compraAtual.Seguro" class="form-control"
+                                                         @oninput="RecalcularTotais" />
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="form-label">Outras despesas</label>
+                                            <InputNumber @bind-Value="compraAtual.OutrasDespesas" class="form-control"
+                                                         @oninput="RecalcularTotais" />
+                                        </div>
+                                    </div>
+                                    <dl class="row mb-0">
+                                        <dt class="col-7 fw-normal text-muted">Total dos produtos</dt>
+                                        <dd class="col-5 text-end">@totalProdutos.ToString("C2")</dd>
+                                        <dt class="col-7 fw-normal text-muted">Custos adicionais</dt>
+                                        <dd class="col-5 text-end">@totalCustos.ToString("C2")</dd>
+                                        <dt class="col-7 fw-semibold">Total da compra</dt>
+                                        <dd class="col-5 text-end fw-bold fs-5 text-primary">@totalGeral.ToString("C2")</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+
+                        
+                        <div class="col-12 col-lg-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-white fw-semibold">Pagamento</div>
+                                <div class="card-body">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-7">
+                                            <label class="form-label">Condição de pagamento</label>
+                                            <InputSelect @bind-Value="compraAtual.CodCondicaoPagamento" class="form-select"
+                                                         @onchange="GerarParcelas">
+                                                <option value="">Selecione...</option>
+                                                @foreach (var cp in listaCondicoes)
+                                                {
+                                                    <option value="@cp.CodCondicao">@cp.Descricao</option>
+                                                }
+                                            </InputSelect>
+                                        </div>
+                                        <div class="col-5">
+                                            <label class="form-label">Forma de pagamento</label>
+                                            <InputSelect @bind-Value="compraAtual.CodFormaPagamento" class="form-select">
+                                                <option value="">Selecione...</option>
+                                                @foreach (var fp in listaFormas)
+                                                {
+                                                    <option value="@fp.CodFormaPagamento">@fp.FormaPagamento</option>
+                                                }
+                                            </InputSelect>
+                                        </div>
+                                    </div>
+                                    @if (compraAtual.Parcelas.Any())
+                                    {
+                                        <table class="table table-sm mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Parcela</th>
+                                                    <th>Vencimento</th>
+                                                    <th class="text-end">Valor</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var p in compraAtual.Parcelas)
+                                                {
+                                                    <tr>
+                                                        <td>@p.Numero/@compraAtual.Parcelas.Count</td>
+                                                        <td>@p.Vencimento.ToString("dd/MM/yyyy")</td>
+                                                        <td class="text-end">@p.Valor.ToString("C2")</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-muted small">Selecione uma condição de pagamento para gerar as parcelas.</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card border-0 shadow-sm mt-3">
+                        <div class="card-body">
+                            <label class="form-label">Observações</label>
+                            <InputTextArea @bind-Value="compraAtual.Observacoes" class="form-control" rows="2"
+                                           placeholder="Anotações sobre a compra" />
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer bg-white">
+                    <button type="button" class="btn btn-outline-secondary" @onclick="FecharModalForm">Cancelar</button>
+                    <button type="button" class="btn btn-primary" @onclick="Salvar">
+                        <i class="bi bi-check-lg me-1"></i>Salvar compra
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* Modal Confirmação de Exclusão *@
+@if (modalExcluirAberto && compraExcluir != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.6)">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModalExcluir"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger fw-bold">Tem certeza que deseja excluir esta compra? O estoque dos produtos será revertido.</p>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr><th>Código</th><td>@compraExcluir.CodCompra</td></tr>
+                            <tr><th>Nota</th><td>@compraExcluir.Modelo/@compraExcluir.Serie/@compraExcluir.NumeroNota</td></tr>
+                            <tr><th>Fornecedor</th><td>@compraExcluir.oFornecedor?.RazaoSocial</td></tr>
+                            <tr><th>Emissão</th><td>@compraExcluir.DataEmissao.ToString("dd/MM/yyyy")</td></tr>
+                            <tr><th>Itens</th><td>@compraExcluir.Itens.Count produto(s)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModalExcluir">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmarExclusao">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Compras> listaCompras = new();
+    private List<Fornecedores> listaFornecedores = new();
+    private List<Transportadores> listaTransportadores = new();
+    private List<Produtos> listaProdutos = new();
+    private List<CondicaoPagamento> listaCondicoes = new();
+    private List<FormasPagamento> listaFormas = new();
+
+    private Compras compraAtual = new();
+    private Compras? compraExcluir;
+    private bool modalFormAberto = false;
+    private bool modalExcluirAberto = false;
+    private string? mensagemErro;
+    private string? mensagemSucesso;
+    private string? mensagemErroModal;
+
+    private decimal totalProdutos = 0;
+    private decimal totalCustos = 0;
+    private decimal totalGeral = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaFornecedores = await fornecedoresService.GetFornecedoresAsync();
+        listaTransportadores = await transportadoresService.GetTransportadoresAsync();
+        listaProdutos = await produtosService.GetProdutosAsync();
+        listaCondicoes = await condicaoPagamentoService.GetCondicoesPagamentoAsync();
+        listaFormas = await formasPagamentoService.GetFormasPagamentoAsync();
+        await CarregarCompras();
+    }
+
+    private async Task CarregarCompras()
+    {
+        listaCompras = await comprasService.GetComprasAsync();
+    }
+
+    private void AbrirModalNovo()
+    {
+        compraAtual = new Compras
+        {
+            DataEmissao = DateTime.Today,
+            DataChegada = DateTime.Today
+        };
+        totalProdutos = 0;
+        totalCustos = 0;
+        totalGeral = 0;
+        mensagemErroModal = null;
+        modalFormAberto = true;
+    }
+
+    private void FecharModalForm()
+    {
+        modalFormAberto = false;
+        compraAtual = new Compras();
+        mensagemErroModal = null;
+    }
+
+    private void AbrirModalExcluir(Compras c)
+    {
+        compraExcluir = c;
+        modalExcluirAberto = true;
+    }
+
+    private void FecharModalExcluir()
+    {
+        modalExcluirAberto = false;
+        compraExcluir = null;
+    }
+
+    private void AdicionarItem()
+    {
+        compraAtual.Itens.Add(new ComprasItens
+        {
+            CodProduto = 0,
+            Quantidade = 1,
+            PrecoUnitario = 0,
+            Desconto = 0
+        });
+        RecalcularTotais();
+    }
+
+    private void RemoverItem(ComprasItens item)
+    {
+        compraAtual.Itens.Remove(item);
+        RecalcularTotais();
+    }
+
+    private void RecalcularTotais()
+    {
+        totalProdutos = compraAtual.Itens
+            .Sum(i => Math.Max(i.Quantidade * i.PrecoUnitario - i.Desconto, 0));
+        totalCustos = compraAtual.Frete + compraAtual.Seguro + compraAtual.OutrasDespesas;
+        totalGeral = totalProdutos + totalCustos;
+        GerarParcelas();
+    }
+
+    private void GerarParcelas(ChangeEventArgs? args = null)
+    {
+        compraAtual.Parcelas.Clear();
+        if (compraAtual.CodCondicaoPagamento == null || totalGeral == 0) return;
+
+        var condicao = listaCondicoes
+            .FirstOrDefault(c => c.CodCondicao == compraAtual.CodCondicaoPagamento);
+        if (condicao == null) return;
+
+        for (int i = 0; i < condicao.Parcelas.Count; i++)
+        {
+            var parcela = condicao.Parcelas[i];
+            compraAtual.Parcelas.Add(new ComprasParcelas
+            {
+                Numero = i + 1,
+                Vencimento = DateTime.Today.AddDays(parcela.Dias),
+                Valor = Math.Round(totalGeral * (parcela.Percentual / 100), 2)
+            });
+        }
+    }
+
+    private async Task Salvar()
+    {
+        LimparMensagens();
+        RecalcularTotais();
+        try
+        {
+            await comprasService.AddCompraAsync(compraAtual);
+            mensagemSucesso = "Compra salva com sucesso. Estoque atualizado.";
+            FecharModalForm();
+            await CarregarCompras();
+        }
+        catch (Exception ex)
+        {
+            mensagemErroModal = ex.Message;
+        }
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (compraExcluir == null) return;
+        LimparMensagens();
+        try
+        {
+            await comprasService.DeleteCompraAsync(compraExcluir.CodCompra);
+            mensagemSucesso = "Compra excluída. Estoque revertido.";
+            FecharModalExcluir();
+            await CarregarCompras();
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = ex.Message;
+            FecharModalExcluir();
+        }
+    }
+
+    private void LimparMensagens()
+    {
+        mensagemErro = null;
+        mensagemSucesso = null;
+    }
+}

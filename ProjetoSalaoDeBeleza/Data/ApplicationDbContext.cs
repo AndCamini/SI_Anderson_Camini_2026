@@ -23,6 +23,9 @@ namespace ProjetoSalaoDeBeleza.Data
         public DbSet<ProjetoSalaoDeBeleza.Models.TiposVeiculos> TiposVeiculos { get; set; }
         public DbSet<ProjetoSalaoDeBeleza.Models.Veiculos> Veiculos { get; set; }
         public DbSet<ProjetoSalaoDeBeleza.Models.FormasPagamento> FormasPagamento { get; set; }
+        public DbSet<ProjetoSalaoDeBeleza.Models.Compras> Compras { get; set; }
+        public DbSet<ProjetoSalaoDeBeleza.Models.ComprasItens> ComprasItens { get; set; }
+        public DbSet<ProjetoSalaoDeBeleza.Models.ComprasParcelas> ComprasParcelas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -87,6 +90,48 @@ namespace ProjetoSalaoDeBeleza.Data
                 .WithMany()
                 .HasForeignKey(f => f.CodCondicaoPagamento)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Compras>()
+                .HasOne(c => c.oFornecedor)
+                .WithMany()
+                .HasForeignKey(c => c.CodFornecedor)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Compras>()
+                .HasOne(c => c.oTransportador)
+                .WithMany()
+                .HasForeignKey(c => c.CodTransportador)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Compras>()
+                .HasOne(c => c.oCondicaoPagamento)
+                .WithMany()
+                .HasForeignKey(c => c.CodCondicaoPagamento)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Compras>()
+                .HasOne(c => c.oFormaPagamento)
+                .WithMany()
+                .HasForeignKey(c => c.CodFormaPagamento)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ComprasItens>()
+                .HasOne(i => i.oCompra)
+                .WithMany(c => c.Itens)
+                .HasForeignKey(i => i.CodCompra)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ComprasItens>()
+                .HasOne(i => i.oProduto)
+                .WithMany()
+                .HasForeignKey(i => i.CodProduto)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ComprasParcelas>()
+                .HasOne(p => p.oCompra)
+                .WithMany(c => c.Parcelas)
+                .HasForeignKey(p => p.CodCompra)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
