@@ -8,6 +8,7 @@
 @inject ProdutosService produtosService
 @inject CondicaoPagamentoService condicaoPagamentoService
 @inject FormasPagamentoService formasPagamentoService
+@inject CategoriasService categoriasService
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="mb-0">Compras</h3>
@@ -111,14 +112,52 @@
                                 </div>
                                 <div class="col-12 col-md-6">
                                     <label class="form-label">Fornecedor</label>
-                                    <InputSelect @bind-Value="compraAtual.CodFornecedor" class="form-select">
-                                        <option value="0">Selecione...</option>
-                                        @foreach (var f in listaFornecedores)
-                                        {
-                                            <option value="@f.CodFornecedor">@f.RazaoSocial</option>
-                                        }
-                                    </InputSelect>
+                                    <div class="input-group">
+                                        <InputSelect @bind-Value="compraAtual.CodFornecedor" class="form-select">
+                                            <option value="0">Selecione...</option>
+                                            @foreach (var f in listaFornecedores)
+                                            {
+                                                <option value="@f.CodFornecedor">@f.RazaoSocial</option>
+                                            }
+                                        </InputSelect>
+                                        <button type="button" class="btn btn-outline-secondary"
+                                                @onclick="() => modalNovoFornecedorAberto = true">
+                                            + Novo
+                                        </button>
+                                    </div>
                                 </div>
+
+                                @if (modalNovoFornecedorAberto)
+                                {
+                                    <div class="card border-primary mt-2 mb-1">
+                                        <div class="card-header bg-primary text-white d-flex justify-content-between">
+                                            <span>Novo Fornecedor</span>
+                                            <button type="button" class="btn-close btn-close-white btn-sm"
+                                                    @onclick="() => { modalNovoFornecedorAberto = false; novoFornecedor = new(); erroNovoFornecedor = null; }"></button>
+                                        </div>
+                                        <div class="card-body">
+                                            @if (!string.IsNullOrEmpty(erroNovoFornecedor))
+                                            {
+                                                <div class="alert alert-danger py-1">@erroNovoFornecedor</div>
+                                            }
+                                            <div class="row g-2">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Razão Social</label>
+                                                    <InputText @bind-Value="novoFornecedor.RazaoSocial" class="form-control form-control-sm" />
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">CNPJ</label>
+                                                    <InputText @bind-Value="novoFornecedor.CNPJ" class="form-control form-control-sm" maxlength="14" />
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Telefone</label>
+                                                    <InputText @bind-Value="novoFornecedor.Telefone" class="form-control form-control-sm" maxlength="15" />
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn btn-primary btn-sm mt-2" @onclick="SalvarNovoFornecedor">Salvar</button>
+                                        </div>
+                                    </div>
+                                }
                                 <div class="col-6 col-md-3">
                                     <label class="form-label">Data de emissão</label>
                                     <InputDate @bind-Value="compraAtual.DataEmissao" class="form-control" />
@@ -129,14 +168,52 @@
                                 </div>
                                 <div class="col-12 col-md-6">
                                     <label class="form-label">Transportadora</label>
-                                    <InputSelect @bind-Value="compraAtual.CodTransportador" class="form-select">
-                                        <option value="">Sem transportadora</option>
-                                        @foreach (var t in listaTransportadores)
-                                        {
-                                            <option value="@t.CodTransportador">@t.Nome</option>
-                                        }
-                                    </InputSelect>
+                                    <div class="input-group">
+                                        <InputSelect @bind-Value="compraAtual.CodTransportador" class="form-select">
+                                            <option value="">Sem transportadora</option>
+                                            @foreach (var t in listaTransportadores)
+                                            {
+                                                <option value="@t.CodTransportador">@t.Nome</option>
+                                            }
+                                        </InputSelect>
+                                        <button type="button" class="btn btn-outline-secondary"
+                                                @onclick="() => modalNovoTransportadorAberto = true">
+                                            + Novo
+                                        </button>
+                                    </div>
                                 </div>
+
+                                @if (modalNovoTransportadorAberto)
+                                {
+                                    <div class="card border-primary mt-2 mb-1">
+                                        <div class="card-header bg-primary text-white d-flex justify-content-between">
+                                            <span>Novo Transportador</span>
+                                            <button type="button" class="btn-close btn-close-white btn-sm"
+                                                    @onclick="() => { modalNovoTransportadorAberto = false; novoTransportador = new(); erroNovoTransportador = null; }"></button>
+                                        </div>
+                                        <div class="card-body">
+                                            @if (!string.IsNullOrEmpty(erroNovoTransportador))
+                                            {
+                                                <div class="alert alert-danger py-1">@erroNovoTransportador</div>
+                                            }
+                                            <div class="row g-2">
+                                                <div class="col-md-5">
+                                                    <label class="form-label">Nome</label>
+                                                    <InputText @bind-Value="novoTransportador.Nome" class="form-control form-control-sm" />
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">CPF</label>
+                                                    <InputText @bind-Value="novoTransportador.CPF" class="form-control form-control-sm" maxlength="11" />
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">CNPJ</label>
+                                                    <InputText @bind-Value="novoTransportador.CNPJ" class="form-control form-control-sm" maxlength="14" />
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn btn-primary btn-sm mt-2" @onclick="SalvarNovoTransportador">Salvar</button>
+                                        </div>
+                                    </div>
+                                }
                             </div>
                         </div>
                     </div>
@@ -145,10 +222,59 @@
                     <div class="card border-0 shadow-sm mb-3">
                         <div class="card-header bg-white d-flex justify-content-between align-items-center">
                             <span class="fw-semibold">Produtos</span>
-                            <button type="button" class="btn btn-sm btn-primary" @onclick="AdicionarItem">
-                                <i class="bi bi-plus-lg me-1"></i>Adicionar produto
-                            </button>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        @onclick="() => modalNovoProdutoAberto = !modalNovoProdutoAberto">
+                                    + Novo produto
+                                </button>
+                                <button type="button" class="btn btn-sm btn-primary" @onclick="AdicionarItem">
+                                    <i class="bi bi-plus-lg me-1"></i>Adicionar à nota
+                                </button>
+                            </div>
                         </div>
+
+                        @* Mini-modal abaixo do cabeçalho, antes da tabela *@
+                        @if (modalNovoProdutoAberto)
+                        {
+                            <div class="card border-primary m-3">
+                                <div class="card-header bg-primary text-white d-flex justify-content-between">
+                                    <span>Novo Produto</span>
+                                    <button type="button" class="btn-close btn-close-white btn-sm"
+                                            @onclick="() => { modalNovoProdutoAberto = false; novoProduto = new(); erroNovoProduto = null; }"></button>
+                                </div>
+                                <div class="card-body">
+                                    @if (!string.IsNullOrEmpty(erroNovoProduto))
+                                    {
+                                        <div class="alert alert-danger py-1">@erroNovoProduto</div>
+                                    }
+                                    <div class="row g-2">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Nome</label>
+                                            <InputText @bind-Value="novoProduto.Produto" class="form-control form-control-sm" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Categoria</label>
+                                            <InputSelect @bind-Value="novoProduto.CodCategoria" class="form-select form-select-sm">
+                                                <option value="0">Selecione...</option>
+                                                @foreach (var cat in listaCategorias)
+                                                {
+                                                    <option value="@cat.CodCategoria">@cat.Categoria</option>
+                                                }
+                                            </InputSelect>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Preço de venda</label>
+                                            <InputNumber @bind-Value="novoProduto.PrecoVenda" class="form-control form-control-sm" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Unidade</label>
+                                            <InputText @bind-Value="novoProduto.UnidadeMedida" class="form-control form-control-sm" maxlength="10" />
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-primary btn-sm mt-2" @onclick="SalvarNovoProduto">Salvar</button>
+                                </div>
+                            </div>
+                        }
                         <div class="card-body p-0">
                             @if (!compraAtual.Itens.Any())
                             {
@@ -210,7 +336,7 @@
                     </div>
 
                     <div class="row g-3">
-                        {{-- Custos e totais --}}
+                        
                         <div class="col-12 col-lg-6">
                             <div class="card border-0 shadow-sm h-100">
                                 <div class="card-header bg-white fw-semibold">Custos e totais</div>
@@ -252,51 +378,148 @@
                                     <div class="row g-3 mb-3">
                                         <div class="col-7">
                                             <label class="form-label">Condição de pagamento</label>
-                                            <InputSelect @bind-Value="compraAtual.CodCondicaoPagamento" class="form-select"
-                                                         @onchange="GerarParcelas">
-                                                <option value="">Selecione...</option>
-                                                @foreach (var cp in listaCondicoes)
-                                                {
-                                                    <option value="@cp.CodCondicao">@cp.Descricao</option>
-                                                }
-                                            </InputSelect>
+                                            <div class="input-group">
+                                                <InputSelect @bind-Value="compraAtual.CodCondicaoPagamento" class="form-select"
+                                                             @onchange="GerarParcelas">
+                                                    <option value="">Selecione...</option>
+                                                    @foreach (var cp in listaCondicoes)
+                                                    {
+                                                        <option value="@cp.CodCondicao">@cp.Descricao</option>
+                                                    }
+                                                </InputSelect>
+                                                <button type="button" class="btn btn-outline-secondary"
+                                                        @onclick="() => modalNovaCondicaoAberto = true">
+                                                    + Nova
+                                                </button>
+                                            </div>
                                         </div>
                                         <div class="col-5">
                                             <label class="form-label">Forma de pagamento</label>
-                                            <InputSelect @bind-Value="compraAtual.CodFormaPagamento" class="form-select">
-                                                <option value="">Selecione...</option>
-                                                @foreach (var fp in listaFormas)
-                                                {
-                                                    <option value="@fp.CodFormaPagamento">@fp.FormaPagamento</option>
-                                                }
-                                            </InputSelect>
+                                            <div class="input-group">
+                                                <InputSelect @bind-Value="compraAtual.CodFormaPagamento" class="form-select">
+                                                    <option value="">Selecione...</option>
+                                                    @foreach (var fp in listaFormas)
+                                                    {
+                                                        <option value="@fp.CodFormaPagamento">@fp.FormaPagamento</option>
+                                                    }
+                                                </InputSelect>
+                                                <button type="button" class="btn btn-outline-secondary"
+                                                        @onclick="() => modalNovaFormaAberto = true">
+                                                    + Nova
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                    @if (compraAtual.Parcelas.Any())
+
+                                    @* Mini-modal Nova Condição *@
+                                    @if (modalNovaCondicaoAberto)
                                     {
-                                        <table class="table table-sm mb-0">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>Parcela</th>
-                                                    <th>Vencimento</th>
-                                                    <th class="text-end">Valor</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach (var p in compraAtual.Parcelas)
+                                        <div class="card border-primary mb-3">
+                                            <div class="card-header bg-primary text-white d-flex justify-content-between">
+                                                <span>Nova Condição de Pagamento</span>
+                                                <button type="button" class="btn-close btn-close-white btn-sm"
+                                                        @onclick="() => { modalNovaCondicaoAberto = false; novaCondicao = new(); erroNovaCondicao = null; }"></button>
+                                            </div>
+                                            <div class="card-body">
+                                                @if (!string.IsNullOrEmpty(erroNovaCondicao))
                                                 {
-                                                    <tr>
-                                                        <td>@p.Numero/@compraAtual.Parcelas.Count</td>
-                                                        <td>@p.Vencimento.ToString("dd/MM/yyyy")</td>
-                                                        <td class="text-end">@p.Valor.ToString("C2")</td>
-                                                    </tr>
+                                                    <div class="alert alert-danger py-1">@erroNovaCondicao</div>
                                                 }
-                                            </tbody>
-                                        </table>
+                                                <div class="row g-2">
+                                                    <div class="col-md-4">
+                                                        <label class="form-label">Descrição</label>
+                                                        <InputText @bind-Value="novaCondicao.Descricao" class="form-control form-control-sm" />
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <label class="form-label">Nº Parcelas</label>
+                                                        <InputNumber @bind-Value="novaCondicao.NumeroParcelas" class="form-control form-control-sm" />
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <label class="form-label">1ª Parcela (dias)</label>
+                                                        <InputNumber @bind-Value="novaCondicao.PrimeiraParcela" class="form-control form-control-sm" />
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <label class="form-label">Juros (%)</label>
+                                                        <InputNumber @bind-Value="novaCondicao.Juros" class="form-control form-control-sm" />
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <label class="form-label">Desconto (%)</label>
+                                                        <InputNumber @bind-Value="novaCondicao.Desconto" class="form-control form-control-sm" />
+                                                    </div>
+                                                </div>
+                                                <hr class="my-2" />
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <span class="fw-semibold small">Parcelas</span>
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm"
+                                                            @onclick="AdicionarParcelaNovaCondicao">
+                                                        + Adicionar parcela
+                                                    </button>
+                                                </div>
+                                                @{
+                                                    var totalPct = novaCondicao.Parcelas.Sum(p => p.Percentual);
+                                                    var pctClass = totalPct == 100 ? "text-success" : "text-danger";
+                                                }
+                                                @if (novaCondicao.Parcelas.Any())
+                                                {
+                                                    <table class="table table-sm mb-2">
+                                                        <thead class="table-light">
+                                                            <tr><th>Nº</th><th>Dias</th><th>%</th><th></th></tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach (var p in novaCondicao.Parcelas)
+                                                            {
+                                                                <tr>
+                                                                    <td>@p.Numero</td>
+                                                                    <td><InputNumber @bind-Value="p.Dias" class="form-control form-control-sm" /></td>
+                                                                    <td><InputNumber @bind-Value="p.Percentual" class="form-control form-control-sm" /></td>
+                                                                    <td>
+                                                                        <button type="button" class="btn btn-link text-danger p-0"
+                                                                                @onclick="() => RemoverParcelaNovaCondicao(p)">
+                                                                            ✕
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            }
+                                                        </tbody>
+                                                    </table>
+                                                    <div class="text-end small @pctClass">Total: @totalPct.ToString("F2")%</div>
+                                                }
+                                                <button type="button" class="btn btn-primary btn-sm mt-2"
+                                                        @onclick="SalvarNovaCondicao">
+                                                    Salvar
+                                                </button>
+                                            </div>
+                                        </div>
                                     }
-                                    else
+
+                                    @* Mini-modal Nova Forma *@
+                                    @if (modalNovaFormaAberto)
                                     {
-                                        <div class="text-muted small">Selecione uma condição de pagamento para gerar as parcelas.</div>
+                                        <div class="card border-primary mb-3">
+                                            <div class="card-header bg-primary text-white d-flex justify-content-between">
+                                                <span>Nova Forma de Pagamento</span>
+                                                <button type="button" class="btn-close btn-close-white btn-sm"
+                                                        @onclick="() => { modalNovaFormaAberto = false; novaForma = new(); erroNovaForma = null; }"></button>
+                                            </div>
+                                            <div class="card-body">
+                                                @if (!string.IsNullOrEmpty(erroNovaForma))
+                                                {
+                                                    <div class="alert alert-danger py-1">@erroNovaForma</div>
+                                                }
+                                                <div class="row g-2 align-items-end">
+                                                    <div class="col-md-8">
+                                                        <label class="form-label">Descrição</label>
+                                                        <InputText @bind-Value="novaForma.FormaPagamento" class="form-control form-control-sm" />
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <button type="button" class="btn btn-primary btn-sm w-100"
+                                                                @onclick="SalvarNovaForma">
+                                                            Salvar
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     }
                                 </div>
                             </div>
@@ -362,14 +585,27 @@
     private List<Produtos> listaProdutos = new();
     private List<CondicaoPagamento> listaCondicoes = new();
     private List<FormasPagamento> listaFormas = new();
+    private List<Categorias> listaCategorias = new();
+    private Fornecedores novoFornecedor = new();
+    private Transportadores novoTransportador = new();
+    private Produtos novoProduto = new();
+    private FormasPagamento novaForma = new();
 
     private Compras compraAtual = new();
     private Compras? compraExcluir;
     private bool modalFormAberto = false;
     private bool modalExcluirAberto = false;
+    private bool modalNovoFornecedorAberto = false;
+    private bool modalNovoTransportadorAberto = false;
+    private bool modalNovoProdutoAberto = false;
+    private bool modalNovaFormaAberto = false;
     private string? mensagemErro;
     private string? mensagemSucesso;
     private string? mensagemErroModal;
+    private string? erroNovoFornecedor;
+    private string? erroNovoTransportador;
+    private string? erroNovoProduto;
+    private string? erroNovaForma;
 
     private decimal totalProdutos = 0;
     private decimal totalCustos = 0;
@@ -382,6 +618,7 @@
         listaProdutos = await produtosService.GetProdutosAsync();
         listaCondicoes = await condicaoPagamentoService.GetCondicoesPagamentoAsync();
         listaFormas = await formasPagamentoService.GetFormasPagamentoAsync();
+        listaCategorias = await categoriasService.GetCategoriasAsync();
         await CarregarCompras();
     }
 
@@ -475,6 +712,18 @@
     {
         LimparMensagens();
         RecalcularTotais();
+
+        if (compraAtual.DataEmissao.Date > DateTime.Today)
+        {
+            mensagemErroModal = "Data de emissão não pode ser posterior a hoje.";
+            return;
+        }
+        if (compraAtual.DataChegada.Date < compraAtual.DataEmissao.Date)
+        {
+            mensagemErroModal = "Data de chegada não pode ser anterior à data de emissão.";
+            return;
+        }
+
         try
         {
             await comprasService.AddCompraAsync(compraAtual);
@@ -504,6 +753,119 @@
             mensagemErro = ex.Message;
             FecharModalExcluir();
         }
+    }
+
+    private async Task SalvarNovoFornecedor()
+    {
+        erroNovoFornecedor = null;
+        if (string.IsNullOrWhiteSpace(novoFornecedor.RazaoSocial))
+        { erroNovoFornecedor = "Razão Social é obrigatória."; return; }
+        if (string.IsNullOrWhiteSpace(novoFornecedor.CNPJ))
+        { erroNovoFornecedor = "CNPJ é obrigatório."; return; }
+        try
+        {
+            await fornecedoresService.AddFornecedorAsync(novoFornecedor);
+            listaFornecedores = await fornecedoresService.GetFornecedoresAsync();
+            compraAtual.CodFornecedor = listaFornecedores
+                .First(f => f.CNPJ == novoFornecedor.CNPJ.ToUpper()).CodFornecedor;
+            novoFornecedor = new Fornecedores();
+            modalNovoFornecedorAberto = false;
+        }
+        catch (Exception ex) { erroNovoFornecedor = ex.Message; }
+    }
+
+    private async Task SalvarNovoTransportador()
+    {
+        erroNovoTransportador = null;
+        if (string.IsNullOrWhiteSpace(novoTransportador.Nome))
+        { erroNovoTransportador = "Nome é obrigatório."; return; }
+        if (string.IsNullOrWhiteSpace(novoTransportador.CPF) && string.IsNullOrWhiteSpace(novoTransportador.CNPJ))
+        { erroNovoTransportador = "Informe CPF ou CNPJ."; return; }
+        try
+        {
+            await transportadoresService.AddTransportadorAsync(novoTransportador);
+            listaTransportadores = await transportadoresService.GetTransportadoresAsync();
+            compraAtual.CodTransportador = listaTransportadores
+                .First(t => t.Nome == novoTransportador.Nome.ToUpper()).CodTransportador;
+            novoTransportador = new Transportadores();
+            modalNovoTransportadorAberto = false;
+        }
+        catch (Exception ex) { erroNovoTransportador = ex.Message; }
+    }
+
+    private async Task SalvarNovoProduto()
+    {
+        erroNovoProduto = null;
+        if (string.IsNullOrWhiteSpace(novoProduto.Produto))
+        { erroNovoProduto = "Nome é obrigatório."; return; }
+        if (novoProduto.CodCategoria == 0)
+        { erroNovoProduto = "Selecione uma categoria."; return; }
+        if (novoProduto.PrecoVenda <= 0)
+        { erroNovoProduto = "Preço de venda deve ser maior que zero."; return; }
+        try
+        {
+            await produtosService.AddProdutoAsync(novoProduto);
+            listaProdutos = await produtosService.GetProdutosAsync();
+            novoProduto = new Produtos();
+            modalNovoProdutoAberto = false;
+        }
+        catch (Exception ex) { erroNovoProduto = ex.Message; }
+    }
+
+    private async Task SalvarNovaForma()
+    {
+        erroNovaForma = null;
+        if (string.IsNullOrWhiteSpace(novaForma.FormaPagamento))
+        { erroNovaForma = "Descrição é obrigatória."; return; }
+        try
+        {
+            await formasPagamentoService.AddFormaPagamentoAsync(novaForma);
+            listaFormas = await formasPagamentoService.GetFormasPagamentoAsync();
+            compraAtual.CodFormaPagamento = listaFormas
+                .First(f => f.FormaPagamento == novaForma.FormaPagamento.ToUpper()).CodFormaPagamento;
+            novaForma = new FormasPagamento();
+            modalNovaFormaAberto = false;
+        }
+        catch (Exception ex) { erroNovaForma = ex.Message; }
+    }
+
+    private bool modalNovaCondicaoAberto = false;
+    private CondicaoPagamento novaCondicao = new();
+    private string? erroNovaCondicao;
+
+    private void AdicionarParcelaNovaCondicao()
+    {
+        novaCondicao.Parcelas.Add(new CondicaoPagamentoParcela
+        {
+            Numero = novaCondicao.Parcelas.Count + 1,
+            Dias = 0,
+            Percentual = 0
+        });
+    }
+
+    private void RemoverParcelaNovaCondicao(CondicaoPagamentoParcela p)
+    {
+        novaCondicao.Parcelas.Remove(p);
+        for (int i = 0; i < novaCondicao.Parcelas.Count; i++)
+            novaCondicao.Parcelas[i].Numero = i + 1;
+    }
+
+    private async Task SalvarNovaCondicao()
+    {
+        erroNovaCondicao = null;
+        if (string.IsNullOrWhiteSpace(novaCondicao.Descricao))
+        { erroNovaCondicao = "Descrição é obrigatória."; return; }
+        try
+        {
+            await condicaoPagamentoService.AddCondicaoAsync(novaCondicao);
+            listaCondicoes = await condicaoPagamentoService.GetCondicoesPagamentoAsync();
+            compraAtual.CodCondicaoPagamento = listaCondicoes
+                .First(c => c.Descricao == novaCondicao.Descricao.ToUpper()).CodCondicao;
+            novaCondicao = new CondicaoPagamento();
+            modalNovaCondicaoAberto = false;
+            GerarParcelas();
+        }
+        catch (Exception ex) { erroNovaCondicao = ex.Message; }
     }
 
     private void LimparMensagens()
