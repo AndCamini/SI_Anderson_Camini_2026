@@ -92,6 +92,9 @@ namespace ProjetoSalaoDeBeleza.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Compras>()
+                .HasKey(c => new { c.Modelo, c.Serie, c.NumeroNota, c.CodFornecedor });
+
+            modelBuilder.Entity<Compras>()
                 .HasOne(c => c.oFornecedor)
                 .WithMany()
                 .HasForeignKey(c => c.CodFornecedor)
@@ -118,7 +121,7 @@ namespace ProjetoSalaoDeBeleza.Data
             modelBuilder.Entity<ComprasItens>()
                 .HasOne(i => i.oCompra)
                 .WithMany(c => c.Itens)
-                .HasForeignKey(i => i.CodCompra)
+                .HasForeignKey(i => new { i.Modelo, i.Serie, i.NumeroNota, i.CodFornecedor })
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ComprasItens>()
@@ -130,7 +133,7 @@ namespace ProjetoSalaoDeBeleza.Data
             modelBuilder.Entity<ComprasParcelas>()
                 .HasOne(p => p.oCompra)
                 .WithMany(c => c.Parcelas)
-                .HasForeignKey(p => p.CodCompra)
+                .HasForeignKey(p => new { p.Modelo, p.Serie, p.NumeroNota, p.CodFornecedor })
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

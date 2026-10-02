@@ -8,7 +8,10 @@ namespace ProjetoSalaoDeBeleza.Models
         [Key]
         public int CodItem { get; set; }
 
-        public int CodCompra { get; set; }
+        public int Modelo { get; set; }
+        public int Serie { get; set; }
+        public int NumeroNota { get; set; }
+        public int CodFornecedor { get; set; }
         public Compras? oCompra { get; set; }
 
         public int CodProduto { get; set; }

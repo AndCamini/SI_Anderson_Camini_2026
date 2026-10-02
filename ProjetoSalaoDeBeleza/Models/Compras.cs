@@ -5,8 +5,6 @@ namespace ProjetoSalaoDeBeleza.Models
 {
     public class Compras
     {
-        [Key]
-        public int CodCompra { get; set; }
 
         [Required]
         public int Modelo { get; set; } = 55;
@@ -14,7 +12,7 @@ namespace ProjetoSalaoDeBeleza.Models
         [Required]
         public int Serie { get; set; } = 1;
 
-        public int? NumeroNota { get; set; }
+        public int NumeroNota { get; set; }
 
         [Required]
         public int CodFornecedor { get; set; }
@@ -23,8 +21,8 @@ namespace ProjetoSalaoDeBeleza.Models
         public int? CodTransportador { get; set; }
         public Transportadores? oTransportador { get; set; }
 
-        public DateTime DataEmissao { get; set; } = DateTime.UtcNow;
-        public DateTime DataChegada { get; set; } = DateTime.UtcNow;
+        public DateTime DataEmissao { get; set; } = DateTime.Today;
+        public DateTime DataChegada { get; set; } = DateTime.Today;
 
         [Column(TypeName = "decimal(10,2)")]
         public decimal Frete { get; set; } = 0;
@@ -41,7 +39,7 @@ namespace ProjetoSalaoDeBeleza.Models
         public int? CodFormaPagamento { get; set; }
         public FormasPagamento? oFormaPagamento { get; set; }
 
-        [MaxLength(500)]
+        [MaxLength(250)]
         public string? Observacoes { get; set; }
 
         public DateTime DataCadastro { get; set; } = DateTime.UtcNow;
