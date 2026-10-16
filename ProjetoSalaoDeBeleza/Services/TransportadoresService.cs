@@ -28,6 +28,8 @@ namespace ProjetoSalaoDeBeleza.Services
             transportador.Bairro = transportador.Bairro?.ToUpper();
             transportador.Complemento = transportador.Complemento?.ToUpper();
 
+            Validar(transportador);
+
             if (string.IsNullOrWhiteSpace(transportador.CPF) && string.IsNullOrWhiteSpace(transportador.CNPJ))
                 throw new Exception("Informe CPF ou CNPJ.");
 
@@ -42,6 +44,9 @@ namespace ProjetoSalaoDeBeleza.Services
             if (!string.IsNullOrWhiteSpace(transportador.Email) &&
                 await _context.Transportadores.AnyAsync(t => t.Email == transportador.Email))
                 throw new Exception("Já existe um transportador com este e-mail.");
+
+            if (transportador.CodCidade == 0)
+                throw new Exception("Selecione uma cidade.");
 
             transportador.oCidade = null;
             transportador.DataCadastro = DateTime.UtcNow;
@@ -61,6 +66,8 @@ namespace ProjetoSalaoDeBeleza.Services
             transportador.Bairro = transportador.Bairro?.ToUpper();
             transportador.Complemento = transportador.Complemento?.ToUpper();
 
+            Validar(transportador);
+
             if (string.IsNullOrWhiteSpace(transportador.CPF) && string.IsNullOrWhiteSpace(transportador.CNPJ))
                 throw new Exception("Informe CPF ou CNPJ.");
 
@@ -78,6 +85,9 @@ namespace ProjetoSalaoDeBeleza.Services
                 await _context.Transportadores.AnyAsync(t => t.Email == transportador.Email
                     && t.CodTransportador != transportador.CodTransportador))
                 throw new Exception("Já existe um transportador com este e-mail.");
+
+            if (transportador.CodCidade == 0)
+                throw new Exception("Selecione uma cidade.");
 
             var existente = await _context.Transportadores.FindAsync(transportador.CodTransportador);
             if (existente == null) throw new Exception("Transportador não encontrado.");
@@ -105,11 +115,24 @@ namespace ProjetoSalaoDeBeleza.Services
             var temVeiculos = await _context.Veiculos.AnyAsync(v => v.CodTransportador == id);
             if (temVeiculos) throw new Exception("Não é possível excluir um transportador que possui veículos vinculados.");
 
+            if (await _context.Compras.AnyAsync(c => c.CodTransportador == id))
+                throw new Exception("Não é possível excluir um transportador vinculado a compras. Desative o cadastro.");
+
             var transportador = await _context.Transportadores.FindAsync(id);
             if (transportador == null) throw new Exception("Transportador não encontrado.");
 
             _context.Transportadores.Remove(transportador);
             await _context.SaveChangesAsync();
+        }
+
+        private static void Validar(Transportadores transportador)
+        {
+            Validacoes.ValidarObrigatorio(transportador.Nome, "Nome é obrigatório.");
+            transportador.CPF = Validacoes.NormalizarCpfOpcional(transportador.CPF);
+            transportador.CNPJ = Validacoes.NormalizarCnpjOpcional(transportador.CNPJ);
+            transportador.Email = Validacoes.NormalizarEmail(transportador.Email);
+            Validacoes.ValidarTelefoneOpcional(transportador.Telefone);
+            transportador.CEP = Validacoes.NormalizarCep(transportador.CEP);
         }
     }
 }

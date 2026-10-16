@@ -1,0 +1,448 @@
+﻿@page "/servicos"
+@rendermode InteractiveServer
+@using ProjetoSalaoDeBeleza.Models
+@using ProjetoSalaoDeBeleza.Services
+@inject ServicosService servicosService
+@inject TiposServicosService tiposServicosService
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Serviços</h3>
+    <button class="btn btn-primary" @onclick="AbrirModalNovo">+ Cadastrar novo</button>
+</div>
+
+@if (!string.IsNullOrEmpty(mensagemErro))
+{
+    <div class="alert alert-danger alert-dismissible">
+        @mensagemErro
+        <button type="button" class="btn-close" @onclick="LimparMensagens"></button>
+    </div>
+}
+@if (!string.IsNullOrEmpty(mensagemSucesso))
+{
+    <div class="alert alert-success alert-dismissible">
+        @mensagemSucesso
+        <button type="button" class="btn-close" @onclick="LimparMensagens"></button>
+    </div>
+}
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Cód</th>
+            <th>Serviço</th>
+            <th>Tipo</th>
+            <th>Tempo médio</th>
+            <th class="text-end">Preço</th>
+            <th class="text-end">Comissão</th>
+            <th>Ativo</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!listaServicos.Any())
+        {
+            <tr><td colspan="8" class="text-center text-muted py-4">Nenhum serviço cadastrado.</td></tr>
+        }
+        @foreach (var s in listaServicos)
+        {
+            <tr>
+                <td>@s.CodServico</td>
+                <td>@s.Servico</td>
+                <td>@s.oTipoServico?.TipoServico</td>
+                <td>@FormatarTempo(s.TempoMedio)</td>
+                <td class="text-end">@s.Preco.ToString("C2")</td>
+                <td class="text-end">@s.ComissaoPercentual.ToString("N2")%</td>
+                <td>@(s.Ativo ? "Sim" : "Não")</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" @onclick="() => AbrirModalEditar(s)">Editar</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => AbrirModalExcluir(s)">Excluir</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (modalFormAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(servicoAtual.CodServico == 0 ? "Novo Serviço" : "Editar Serviço")</h5>
+                    <button type="button" class="btn-close" @onclick="FecharModalForm"></button>
+                </div>
+                <EditForm Model="@servicoAtual" OnValidSubmit="Salvar" FormName="formServicos">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        @if (!string.IsNullOrEmpty(mensagemErroModal))
+                        {
+                            <div class="alert alert-danger">@mensagemErroModal</div>
+                        }
+                        <div class="row g-3">
+                            <div class="col-auto">
+                                <label class="form-label d-block">Status</label>
+                                <div class="form-check form-switch mt-2">
+                                    <InputCheckbox @bind-Value="servicoAtual.Ativo" class="form-check-input" role="switch" id="ativoCheckServico" />
+                                    <label class="form-check-label @(servicoAtual.Ativo ? "text-success" : "text-muted")" for="ativoCheckServico">@(servicoAtual.Ativo ? "Ativo" : "Inativo")</label>
+                                </div>
+                            </div>
+                            <div class="w-100 mt-0"></div>
+                            <div class="col-12 col-md-7">
+                                <label class="form-label">Serviço <span class="text-danger">*</span></label>
+                                <InputText @bind-Value="servicoAtual.Servico" class="form-control" maxlength="100" placeholder="Ex.: Corte feminino, Escova, Coloração" />
+                                <ValidationMessage For="@(() => servicoAtual.Servico)" />
+                            </div>
+                            <div class="col-12 col-md-5">
+                                <label class="form-label">Tipo de Serviço <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input class="form-control" readonly value="@TipoSelecionadoTexto" placeholder="Selecionar tipo..." />
+                                    <button type="button" class="btn btn-outline-secondary" @onclick="AbrirConsultaTipos">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label">Tempo médio (minutos) <span class="text-danger">*</span></label>
+                                <InputNumber @bind-Value="servicoAtual.TempoMedio" class="form-control" min="1" max="720" step="1" />
+                                <div class="form-text">@FormatarTempo(servicoAtual.TempoMedio)</div>
+                                <ValidationMessage For="@(() => servicoAtual.TempoMedio)" />
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label class="form-label">Preço (R$) <span class="text-danger">*</span></label>
+                                <InputNumber @bind-Value="servicoAtual.Preco" class="form-control" step="0.01" />
+                                <ValidationMessage For="@(() => servicoAtual.Preco)" />
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label class="form-label">Comissão (%)</label>
+                                <InputNumber @bind-Value="servicoAtual.ComissaoPercentual" class="form-control" step="0.01" />
+                                <div class="form-text">Percentual pago ao profissional.</div>
+                                <ValidationMessage For="@(() => servicoAtual.ComissaoPercentual)" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Descrição</label>
+                                <InputTextArea @bind-Value="servicoAtual.Descricao" class="form-control" rows="2" maxlength="500"
+                                               placeholder="Detalhes do serviço, produtos utilizados, cuidados..." />
+                            </div>
+                        </div>
+                        @if (servicoAtual.CodServico != 0)
+                        {
+                            <hr class="my-3" />
+                            <div class="row g-3 text-muted small">
+                                <div class="col-md-4">
+                                    <label class="form-label">Cadastrado em</label>
+                                    <input type="text" class="form-control form-control-sm"
+                                           value="@servicoAtual.DataCadastro.ToString("dd/MM/yyyy HH:mm")" disabled />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Última Alteração</label>
+                                    <input type="text" class="form-control form-control-sm"
+                                           value="@(servicoAtual.DataUltimaAlteracao?.ToString("dd/MM/yyyy HH:mm") ?? "—")" disabled />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Alterado por</label>
+                                    <input type="text" class="form-control form-control-sm"
+                                           value="@(servicoAtual.UsuarioUltimaAlteracao ?? "—")" disabled />
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-dark px-4">Salvar</button>
+                        <button type="button" class="btn btn-link text-secondary text-decoration-none" @onclick="FecharModalForm">Cancelar</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@if (modalTiposAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5); z-index:1060">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-scissors me-2"></i>Tipos de serviço</h5>
+                    <button type="button" class="btn-close" @onclick="() => modalTiposAberto = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex gap-2 mb-3">
+                        <input class="form-control" placeholder="Buscar por código ou descrição"
+                               @bind="termoTipo" @bind:event="oninput" />
+                        <button type="button" class="btn btn-outline-secondary text-nowrap"
+                                @onclick="() => { cadastroTipoAberto = !cadastroTipoAberto; erroNovoTipo = null; }">
+                            + Novo tipo
+                        </button>
+                    </div>
+
+                    @if (cadastroTipoAberto)
+                    {
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">Novo tipo de serviço</div>
+                            <div class="card-body">
+                                @if (!string.IsNullOrEmpty(erroNovoTipo))
+                                {
+                                    <div class="alert alert-danger py-1">@erroNovoTipo</div>
+                                }
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-md-8">
+                                        <label class="form-label">Descrição</label>
+                                        <InputText @bind-Value="novoTipo.TipoServico" class="form-control form-control-sm" maxlength="50"
+                                                   placeholder="Ex.: Cabelo, Unhas, Estética, Barba" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="button" class="btn btn-primary btn-sm w-100" @onclick="SalvarNovoTipo">Salvar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <table class="table table-sm table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Cód.</th>
+                                <th>Tipo</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!TiposFiltrados.Any())
+                            {
+                                <tr><td colspan="3" class="text-center text-muted py-3">Nenhum tipo encontrado.</td></tr>
+                            }
+                            @foreach (var t in TiposFiltrados)
+                            {
+                                <tr class="@(servicoAtual.CodTipoServico == t.CodTipoServico ? "table-primary" : "")">
+                                    <td>@t.CodTipoServico</td>
+                                    <td>@t.TipoServico</td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-primary btn-sm" @onclick="() => SelecionarTipo(t)">
+                                            Selecionar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (modalExcluirAberto && servicoExcluir != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="FecharModalExcluir"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger fw-bold">Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita.</p>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr><th>Código</th><td>@servicoExcluir.CodServico</td></tr>
+                            <tr><th>Serviço</th><td>@servicoExcluir.Servico</td></tr>
+                            <tr><th>Tipo</th><td>@servicoExcluir.oTipoServico?.TipoServico</td></tr>
+                            <tr><th>Tempo médio</th><td>@FormatarTempo(servicoExcluir.TempoMedio)</td></tr>
+                            <tr><th>Preço</th><td>@servicoExcluir.Preco.ToString("C2")</td></tr>
+                            <tr><th>Ativo</th><td>@(servicoExcluir.Ativo ? "Sim" : "Não")</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FecharModalExcluir">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmarExclusao">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Servicos> listaServicos = new();
+    private List<TiposServicos> listaTipos = new();
+    private Servicos servicoAtual = new();
+    private Servicos? servicoExcluir;
+    private bool modalFormAberto;
+    private bool modalExcluirAberto;
+    private string? mensagemErro;
+    private string? mensagemSucesso;
+    private string? mensagemErroModal;
+
+    private bool modalTiposAberto;
+    private bool cadastroTipoAberto;
+    private string termoTipo = string.Empty;
+    private TiposServicos novoTipo = new();
+    private string? erroNovoTipo;
+
+    private IEnumerable<TiposServicos> TiposFiltrados
+    {
+        get
+        {
+            var ativos = listaTipos.Where(t => t.Ativo);
+            if (string.IsNullOrWhiteSpace(termoTipo)) return ativos;
+
+            var termo = termoTipo.Trim().ToUpper();
+            return ativos.Where(t =>
+                t.CodTipoServico.ToString() == termo ||
+                t.TipoServico.ToUpper().Contains(termo));
+        }
+    }
+
+    private string TipoSelecionadoTexto
+    {
+        get
+        {
+            var tipo = listaTipos.FirstOrDefault(t => t.CodTipoServico == servicoAtual.CodTipoServico);
+            return tipo == null ? "" : $"{tipo.CodTipoServico} - {tipo.TipoServico}";
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaTipos = await tiposServicosService.GetTiposServicosAsync();
+        await CarregarServicos();
+    }
+
+    private async Task CarregarServicos()
+    {
+        listaServicos = await servicosService.GetServicosAsync();
+    }
+
+    private static string FormatarTempo(int minutos)
+    {
+        if (minutos <= 0) return "—";
+        if (minutos < 60) return $"{minutos} min";
+        var resto = minutos % 60;
+        return resto == 0 ? $"{minutos / 60}h" : $"{minutos / 60}h {resto:00}min";
+    }
+
+    private void AbrirModalNovo()
+    {
+        servicoAtual = new Servicos();
+        mensagemErroModal = null;
+        modalTiposAberto = false;
+        modalFormAberto = true;
+    }
+
+    private void AbrirModalEditar(Servicos s)
+    {
+        servicoAtual = new Servicos
+        {
+            CodServico = s.CodServico,
+            Servico = s.Servico,
+            Descricao = s.Descricao,
+            CodTipoServico = s.CodTipoServico,
+            TempoMedio = s.TempoMedio,
+            Preco = s.Preco,
+            ComissaoPercentual = s.ComissaoPercentual,
+            Ativo = s.Ativo,
+            DataCadastro = s.DataCadastro,
+            DataUltimaAlteracao = s.DataUltimaAlteracao,
+            UsuarioUltimaAlteracao = s.UsuarioUltimaAlteracao
+        };
+        mensagemErroModal = null;
+        modalTiposAberto = false;
+        modalFormAberto = true;
+    }
+
+    private void FecharModalForm()
+    {
+        modalFormAberto = false;
+        modalTiposAberto = false;
+        servicoAtual = new Servicos();
+        mensagemErroModal = null;
+    }
+
+    private void AbrirConsultaTipos()
+    {
+        termoTipo = string.Empty;
+        cadastroTipoAberto = false;
+        erroNovoTipo = null;
+        modalTiposAberto = true;
+    }
+
+    private void SelecionarTipo(TiposServicos tipo)
+    {
+        servicoAtual.CodTipoServico = tipo.CodTipoServico;
+        modalTiposAberto = false;
+    }
+
+    private async Task SalvarNovoTipo()
+    {
+        erroNovoTipo = null;
+        try
+        {
+            await tiposServicosService.AddTipoServicoAsync(novoTipo);
+            listaTipos = await tiposServicosService.GetTiposServicosAsync();
+            var criado = listaTipos.FirstOrDefault(t => t.CodTipoServico == novoTipo.CodTipoServico);
+            novoTipo = new TiposServicos();
+            cadastroTipoAberto = false;
+            if (criado != null) SelecionarTipo(criado);
+        }
+        catch (Exception ex)
+        {
+            erroNovoTipo = ex.InnerException?.Message ?? ex.Message;
+        }
+    }
+
+    private async Task Salvar()
+    {
+        LimparMensagens();
+        try
+        {
+            if (servicoAtual.CodServico == 0)
+                await servicosService.AddServicoAsync(servicoAtual);
+            else
+                await servicosService.UpdateServicoAsync(servicoAtual);
+
+            mensagemSucesso = "Serviço salvo com sucesso.";
+            FecharModalForm();
+            await CarregarServicos();
+        }
+        catch (Exception ex)
+        {
+            mensagemErroModal = ex.InnerException?.Message ?? ex.Message;
+        }
+    }
+
+    private void AbrirModalExcluir(Servicos s)
+    {
+        servicoExcluir = s;
+        modalExcluirAberto = true;
+    }
+
+    private void FecharModalExcluir()
+    {
+        modalExcluirAberto = false;
+        servicoExcluir = null;
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        if (servicoExcluir == null) return;
+        LimparMensagens();
+        try
+        {
+            await servicosService.DeleteServicoAsync(servicoExcluir.CodServico);
+            mensagemSucesso = "Serviço excluído com sucesso.";
+            FecharModalExcluir();
+            await CarregarServicos();
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = ex.InnerException?.Message ?? ex.Message;
+            FecharModalExcluir();
+        }
+    }
+
+    private void LimparMensagens()
+    {
+        mensagemErro = null;
+        mensagemSucesso = null;
+    }
+}

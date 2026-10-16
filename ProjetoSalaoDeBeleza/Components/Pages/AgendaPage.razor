@@ -1,0 +1,763 @@
+﻿@page "/agenda"
+@rendermode InteractiveServer
+@using ProjetoSalaoDeBeleza.Models
+@using ProjetoSalaoDeBeleza.Services
+@inject AgendamentosService agendamentosService
+@inject ClientesService clientesService
+@inject FuncionariosService funcionariosService
+@inject ServicosService servicosService
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h3 class="mb-0">Agenda</h3>
+    <button class="btn btn-primary" @onclick="() => AbrirModalNovo(null, null)">
+        <i class="bi bi-plus-lg me-1"></i>Novo agendamento
+    </button>
+</div>
+
+@if (!string.IsNullOrEmpty(mensagemErro))
+{
+    <div class="alert alert-danger alert-dismissible">
+        @mensagemErro
+        <button type="button" class="btn-close" @onclick="LimparMensagens"></button>
+    </div>
+}
+@if (!string.IsNullOrEmpty(mensagemSucesso))
+{
+    <div class="alert alert-success alert-dismissible">
+        @mensagemSucesso
+        <button type="button" class="btn-close" @onclick="LimparMensagens"></button>
+    </div>
+}
+
+<div class="agenda-barra">
+    <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-outline-secondary" @onclick="() => MudarDia(-1)" title="Dia anterior">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+        <button type="button" class="btn btn-outline-secondary" @onclick="IrParaHoje">Hoje</button>
+        <button type="button" class="btn btn-outline-secondary" @onclick="() => MudarDia(1)" title="Próximo dia">
+            <i class="bi bi-chevron-right"></i>
+        </button>
+        <input type="date" class="form-control agenda-data" value="@diaSelecionado.ToString("yyyy-MM-dd")" @onchange="SelecionarDia" />
+        <span class="agenda-dia-extenso">@diaSelecionado.ToString("dddd, dd 'de' MMMM")</span>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <span class="small text-muted">
+            @AgendamentosAtivos.Count() agendamento(s) · previsto @AgendamentosAtivos.Sum(a => a.Valor).ToString("C2")
+        </span>
+        <select class="form-select agenda-filtro" value="@filtroFuncionario" @onchange="FiltrarFuncionario">
+            <option value="0">Todos os funcionários</option>
+            @foreach (var f in listaFuncionarios.Where(f => f.Ativo))
+            {
+                <option value="@f.CodPessoa">@f.Nome</option>
+            }
+        </select>
+    </div>
+</div>
+
+@if (!ColunasFuncionarios.Any())
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center text-muted py-5">
+            Nenhum funcionário ativo cadastrado. Cadastre funcionários para usar a agenda.
+        </div>
+    </div>
+}
+else
+{
+    <div class="agenda card border-0 shadow-sm">
+        <div class="agenda-scroll">
+            <div class="agenda-grade" style="--colunas:@ColunasFuncionarios.Count()">
+                <div class="agenda-canto"></div>
+                @foreach (var f in ColunasFuncionarios)
+                {
+                    var qtd = agendamentosDoDia.Count(a => a.CodFuncionario == f.CodPessoa && AgendamentosService.OcupaHorario(a.Status));
+                    <div class="agenda-cabecalho">
+                        <span class="agenda-avatar">@Iniciais(f.Nome)</span>
+                        <div class="text-truncate">
+                            <div class="fw-semibold text-truncate">@f.Nome</div>
+                            <div class="small text-muted">@(string.IsNullOrWhiteSpace(f.Cargo) ? "" : f.Cargo + " · ")@qtd atend.</div>
+                        </div>
+                    </div>
+                }
+
+                <div class="agenda-horas" style="height:@AlturaGrade">
+                    @for (var h = horaInicial; h < horaFinal; h++)
+                    {
+                        <div class="agenda-hora" style="height:@Px(60)">@($"{h:00}:00")</div>
+                    }
+                </div>
+
+                @foreach (var f in ColunasFuncionarios)
+                {
+                    <div class="agenda-coluna" style="height:@AlturaGrade">
+                        @for (var minuto = 0; minuto < (horaFinal - horaInicial) * 60; minuto += IntervaloSlot)
+                        {
+                            var horario = diaSelecionado.Date.AddHours(horaInicial).AddMinutes(minuto);
+                            var funcionario = f;
+                            <div class="agenda-slot @(minuto % 60 == 0 ? "hora-cheia" : "")" style="height:@Px(IntervaloSlot)"
+                                 title="@horario.ToString("HH:mm")"
+                                 @onclick="() => AbrirModalNovo(funcionario, horario)"></div>
+                        }
+
+                        @foreach (var a in agendamentosDoDia.Where(a => a.CodFuncionario == f.CodPessoa))
+                        {
+                            var item = a;
+                            <div class="agenda-evento status-@a.Status.ToString().ToLower()"
+                                 style="top:@Px(MinutosDesdeInicio(a.DataHoraInicio)); height:@Px(Math.Max(a.Duracao, 20))"
+                                 @onclick="() => AbrirModalEditar(item)" @onclick:stopPropagation="true">
+                                <div class="agenda-evento-hora">@a.DataHoraInicio.ToString("HH:mm") – @a.DataHoraFim.ToString("HH:mm")</div>
+                                <div class="agenda-evento-cliente text-truncate">@a.oCliente?.Nome</div>
+                                <div class="agenda-evento-servico text-truncate">@a.oServico?.Servico</div>
+                                <span class="agenda-evento-status">@NomeStatus(a.Status)</span>
+                            </div>
+                        }
+
+                        @if (diaSelecionado.Date == DateTime.Today && DateTime.Now.Hour >= horaInicial && DateTime.Now.Hour < horaFinal)
+                        {
+                            <div class="agenda-agora" style="top:@Px(MinutosDesdeInicio(DateTime.Now))"></div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="agenda-legenda">
+        @foreach (var s in Enum.GetValues<StatusAgendamento>())
+        {
+            <span><i class="status-@s.ToString().ToLower()"></i>@NomeStatus(s)</span>
+        }
+    </div>
+}
+
+@if (modalFormAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(agendamentoAtual.CodAgendamento == 0 ? "Novo Agendamento" : "Editar Agendamento")</h5>
+                    <button type="button" class="btn-close" @onclick="FecharModalForm"></button>
+                </div>
+                <div class="modal-body">
+                    @if (!string.IsNullOrEmpty(mensagemErroModal))
+                    {
+                        <div class="alert alert-danger">@mensagemErroModal</div>
+                    }
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Cliente <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input class="form-control" readonly value="@ClienteSelecionadoTexto" placeholder="Selecionar cliente..." />
+                                <button type="button" class="btn btn-outline-secondary" @onclick="AbrirConsultaClientes">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Funcionário <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input class="form-control" readonly value="@FuncionarioSelecionadoTexto" placeholder="Selecionar funcionário..." />
+                                <button type="button" class="btn btn-outline-secondary" @onclick="AbrirConsultaFuncionarios">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Serviço <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input class="form-control" readonly value="@ServicoSelecionadoTexto" placeholder="Selecionar serviço..." />
+                                <button type="button" class="btn btn-outline-secondary" @onclick="AbrirConsultaServicos">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label">Data <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" @bind="dataForm" />
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label">Início <span class="text-danger">*</span></label>
+                            <input type="time" class="form-control" step="300" @bind="horaForm" />
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label">Duração (min) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" min="1" max="720" step="1" @bind="agendamentoAtual.Duracao" />
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label">Término</label>
+                            <input class="form-control" readonly value="@TerminoTexto" />
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <label class="form-label">Valor (R$)</label>
+                            <input type="number" class="form-control" step="0.01" min="0" @bind="agendamentoAtual.Valor" />
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" value="@agendamentoAtual.Status" @onchange="SelecionarStatus">
+                                @foreach (var s in Enum.GetValues<StatusAgendamento>())
+                                {
+                                    <option value="@s">@NomeStatus(s)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Observações</label>
+                            <textarea class="form-control" rows="2" maxlength="500" @bind="agendamentoAtual.Observacoes"
+                                      placeholder="Preferências do cliente, produtos, recados..."></textarea>
+                        </div>
+                    </div>
+                    @if (agendamentoAtual.CodAgendamento != 0)
+                    {
+                        <hr class="my-3" />
+                        <div class="row g-3 text-muted small">
+                            <div class="col-md-4">
+                                <label class="form-label">Cadastrado em</label>
+                                <input type="text" class="form-control form-control-sm"
+                                       value="@agendamentoAtual.DataCadastro.ToLocalTime().ToString("dd/MM/yyyy HH:mm")" disabled />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Última Alteração</label>
+                                <input type="text" class="form-control form-control-sm"
+                                       value="@(agendamentoAtual.DataUltimaAlteracao?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")" disabled />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Alterado por</label>
+                                <input type="text" class="form-control form-control-sm"
+                                       value="@(agendamentoAtual.UsuarioUltimaAlteracao ?? "—")" disabled />
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    @if (agendamentoAtual.CodAgendamento != 0)
+                    {
+                        <button type="button" class="btn btn-outline-danger me-auto" @onclick="() => modalExcluirAberto = true">
+                            <i class="bi bi-trash me-1"></i>Excluir
+                        </button>
+                    }
+                    <button type="button" class="btn btn-dark px-4" @onclick="Salvar">Salvar</button>
+                    <button type="button" class="btn btn-link text-secondary text-decoration-none" @onclick="FecharModalForm">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (modalClientesAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5); z-index:1060">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-people me-2"></i>Clientes</h5>
+                    <button type="button" class="btn-close" @onclick="() => modalClientesAberto = false"></button>
+                </div>
+                <div class="modal-body">
+                    <input class="form-control mb-3" placeholder="Buscar por código, nome, CPF/CNPJ ou telefone"
+                           @bind="termoCliente" @bind:event="oninput" />
+                    <table class="table table-sm table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Cód.</th>
+                                <th>Nome</th>
+                                <th>Telefone</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!ClientesFiltrados.Any())
+                            {
+                                <tr><td colspan="4" class="text-center text-muted py-3">Nenhum cliente encontrado.</td></tr>
+                            }
+                            @foreach (var c in ClientesFiltrados)
+                            {
+                                <tr class="@(agendamentoAtual.CodCliente == c.CodPessoa ? "table-primary" : "")">
+                                    <td>@c.CodPessoa</td>
+                                    <td>@c.Nome</td>
+                                    <td>@c.Telefone</td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-primary btn-sm" @onclick="() => SelecionarCliente(c)">
+                                            Selecionar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (modalFuncionariosAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5); z-index:1060">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-badge me-2"></i>Funcionários</h5>
+                    <button type="button" class="btn-close" @onclick="() => modalFuncionariosAberto = false"></button>
+                </div>
+                <div class="modal-body">
+                    <input class="form-control mb-3" placeholder="Buscar por código, nome ou cargo"
+                           @bind="termoFuncionario" @bind:event="oninput" />
+                    <table class="table table-sm table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Cód.</th>
+                                <th>Nome</th>
+                                <th>Cargo</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!FuncionariosFiltrados.Any())
+                            {
+                                <tr><td colspan="4" class="text-center text-muted py-3">Nenhum funcionário encontrado.</td></tr>
+                            }
+                            @foreach (var f in FuncionariosFiltrados)
+                            {
+                                <tr class="@(agendamentoAtual.CodFuncionario == f.CodPessoa ? "table-primary" : "")">
+                                    <td>@f.CodPessoa</td>
+                                    <td>@f.Nome</td>
+                                    <td>@f.Cargo</td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-primary btn-sm" @onclick="() => SelecionarFuncionario(f)">
+                                            Selecionar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (modalServicosAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5); z-index:1060">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-scissors me-2"></i>Serviços</h5>
+                    <button type="button" class="btn-close" @onclick="() => modalServicosAberto = false"></button>
+                </div>
+                <div class="modal-body">
+                    <input class="form-control mb-3" placeholder="Buscar por código, serviço ou tipo"
+                           @bind="termoServico" @bind:event="oninput" />
+                    <table class="table table-sm table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Cód.</th>
+                                <th>Serviço</th>
+                                <th>Tipo</th>
+                                <th>Tempo</th>
+                                <th class="text-end">Preço</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!ServicosFiltrados.Any())
+                            {
+                                <tr><td colspan="6" class="text-center text-muted py-3">Nenhum serviço encontrado.</td></tr>
+                            }
+                            @foreach (var s in ServicosFiltrados)
+                            {
+                                <tr class="@(agendamentoAtual.CodServico == s.CodServico ? "table-primary" : "")">
+                                    <td>@s.CodServico</td>
+                                    <td>@s.Servico</td>
+                                    <td>@s.oTipoServico?.TipoServico</td>
+                                    <td>@FormatarTempo(s.TempoMedio)</td>
+                                    <td class="text-end">@s.Preco.ToString("C2")</td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-primary btn-sm" @onclick="() => SelecionarServico(s)">
+                                            Selecionar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (modalExcluirAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5); z-index:1060">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="() => modalExcluirAberto = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger fw-bold">Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.</p>
+                    <p class="small text-muted mb-0">Para manter o histórico, prefira mudar o status para "Cancelado".</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => modalExcluirAberto = false">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmarExclusao">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private const int IntervaloSlot = 30;
+    private const double PixelsPorMinuto = 1.4;
+
+    private List<Agendamentos> agendamentosDoDia = new();
+    private List<Clientes> listaClientes = new();
+    private List<Funcionarios> listaFuncionarios = new();
+    private List<Servicos> listaServicos = new();
+
+    private DateTime diaSelecionado = DateTime.Today;
+    private int filtroFuncionario;
+    private int horaInicial = 7;
+    private int horaFinal = 21;
+
+    private Agendamentos agendamentoAtual = new();
+    private DateTime dataForm = DateTime.Today;
+    private TimeOnly horaForm = new(9, 0);
+    private bool modalFormAberto;
+    private bool modalExcluirAberto;
+    private string? mensagemErro;
+    private string? mensagemSucesso;
+    private string? mensagemErroModal;
+
+    private bool modalClientesAberto;
+    private string termoCliente = string.Empty;
+    private bool modalFuncionariosAberto;
+    private string termoFuncionario = string.Empty;
+    private bool modalServicosAberto;
+    private string termoServico = string.Empty;
+
+    private IEnumerable<Agendamentos> AgendamentosAtivos =>
+        agendamentosDoDia.Where(a => AgendamentosService.OcupaHorario(a.Status) &&
+                                     (filtroFuncionario == 0 || a.CodFuncionario == filtroFuncionario));
+
+    private IEnumerable<Funcionarios> ColunasFuncionarios =>
+        listaFuncionarios
+            .Where(f => f.Ativo || agendamentosDoDia.Any(a => a.CodFuncionario == f.CodPessoa))
+            .Where(f => filtroFuncionario == 0 || f.CodPessoa == filtroFuncionario)
+            .OrderBy(f => f.Nome);
+
+    private string AlturaGrade => Px((horaFinal - horaInicial) * 60);
+
+    private IEnumerable<Clientes> ClientesFiltrados
+    {
+        get
+        {
+            var ativos = listaClientes.Where(c => c.Ativo);
+            if (string.IsNullOrWhiteSpace(termoCliente)) return ativos;
+
+            var termo = termoCliente.Trim().ToUpper();
+            var digitos = Validacoes.SomenteDigitos(termo);
+            return ativos.Where(c =>
+                c.CodPessoa.ToString() == termo ||
+                c.Nome.ToUpper().Contains(termo) ||
+                (digitos.Length > 0 && (c.CPF.Contains(digitos) || Validacoes.SomenteDigitos(c.Telefone).Contains(digitos))));
+        }
+    }
+
+    private IEnumerable<Funcionarios> FuncionariosFiltrados
+    {
+        get
+        {
+            var ativos = listaFuncionarios.Where(f => f.Ativo);
+            if (string.IsNullOrWhiteSpace(termoFuncionario)) return ativos;
+
+            var termo = termoFuncionario.Trim().ToUpper();
+            return ativos.Where(f =>
+                f.CodPessoa.ToString() == termo ||
+                f.Nome.ToUpper().Contains(termo) ||
+                (f.Cargo ?? "").ToUpper().Contains(termo));
+        }
+    }
+
+    private IEnumerable<Servicos> ServicosFiltrados
+    {
+        get
+        {
+            var ativos = listaServicos.Where(s => s.Ativo);
+            if (string.IsNullOrWhiteSpace(termoServico)) return ativos;
+
+            var termo = termoServico.Trim().ToUpper();
+            return ativos.Where(s =>
+                s.CodServico.ToString() == termo ||
+                s.Servico.ToUpper().Contains(termo) ||
+                (s.oTipoServico?.TipoServico ?? "").ToUpper().Contains(termo));
+        }
+    }
+
+    private string ClienteSelecionadoTexto
+    {
+        get
+        {
+            var c = listaClientes.FirstOrDefault(c => c.CodPessoa == agendamentoAtual.CodCliente);
+            return c == null ? "" : $"{c.CodPessoa} - {c.Nome}{(string.IsNullOrWhiteSpace(c.Telefone) ? "" : " · " + c.Telefone)}";
+        }
+    }
+
+    private string FuncionarioSelecionadoTexto
+    {
+        get
+        {
+            var f = listaFuncionarios.FirstOrDefault(f => f.CodPessoa == agendamentoAtual.CodFuncionario);
+            return f == null ? "" : $"{f.CodPessoa} - {f.Nome}";
+        }
+    }
+
+    private string ServicoSelecionadoTexto
+    {
+        get
+        {
+            var s = listaServicos.FirstOrDefault(s => s.CodServico == agendamentoAtual.CodServico);
+            return s == null ? "" : $"{s.CodServico} - {s.Servico} · {FormatarTempo(s.TempoMedio)} · {s.Preco:C2}";
+        }
+    }
+
+    private string TerminoTexto =>
+        agendamentoAtual.Duracao > 0 ? horaForm.AddMinutes(agendamentoAtual.Duracao).ToString("HH:mm") : "—";
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaClientes = (await clientesService.GetClientesAsync()).OrderBy(c => c.Nome).ToList();
+        listaFuncionarios = (await funcionariosService.GetFuncionariosAsync()).OrderBy(f => f.Nome).ToList();
+        listaServicos = await servicosService.GetServicosAsync();
+        await CarregarDia();
+    }
+
+    private async Task CarregarDia()
+    {
+        agendamentosDoDia = await agendamentosService.GetAgendamentosDoDiaAsync(diaSelecionado);
+
+        horaInicial = 7;
+        horaFinal = 21;
+        if (agendamentosDoDia.Any())
+        {
+            horaInicial = Math.Min(horaInicial, agendamentosDoDia.Min(a => a.DataHoraInicio.Hour));
+            var ultimoFim = agendamentosDoDia.Max(a => a.DataHoraFim);
+            var horaFim = ultimoFim.Minute > 0 ? ultimoFim.Hour + 1 : ultimoFim.Hour;
+            if (ultimoFim.Date > diaSelecionado.Date) horaFim = 24;
+            horaFinal = Math.Max(horaFinal, Math.Min(horaFim, 24));
+        }
+    }
+
+    private async Task MudarDia(int dias)
+    {
+        diaSelecionado = diaSelecionado.AddDays(dias);
+        await CarregarDia();
+    }
+
+    private async Task IrParaHoje()
+    {
+        diaSelecionado = DateTime.Today;
+        await CarregarDia();
+    }
+
+    private async Task SelecionarDia(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var dia))
+        {
+            diaSelecionado = dia.Date;
+            await CarregarDia();
+        }
+    }
+
+    private void FiltrarFuncionario(ChangeEventArgs e)
+    {
+        filtroFuncionario = int.TryParse(e.Value?.ToString(), out var id) ? id : 0;
+    }
+
+    private int MinutosDesdeInicio(DateTime horario) =>
+        (int)(horario - diaSelecionado.Date.AddHours(horaInicial)).TotalMinutes;
+
+    private static string Px(double minutos) =>
+        (minutos * PixelsPorMinuto).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "px";
+
+    private static string Iniciais(string nome)
+    {
+        var partes = nome.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length == 0) return "?";
+        return partes.Length == 1 ? partes[0][..1] : $"{partes[0][0]}{partes[^1][0]}";
+    }
+
+    private static string FormatarTempo(int minutos)
+    {
+        if (minutos <= 0) return "—";
+        if (minutos < 60) return $"{minutos} min";
+        var resto = minutos % 60;
+        return resto == 0 ? $"{minutos / 60}h" : $"{minutos / 60}h {resto:00}min";
+    }
+
+    private static string NomeStatus(StatusAgendamento status) => status switch
+    {
+        StatusAgendamento.Agendado => "Agendado",
+        StatusAgendamento.Confirmado => "Confirmado",
+        StatusAgendamento.EmAtendimento => "Em atendimento",
+        StatusAgendamento.Concluido => "Concluído",
+        StatusAgendamento.Cancelado => "Cancelado",
+        StatusAgendamento.NaoCompareceu => "Não compareceu",
+        _ => status.ToString()
+    };
+
+    private void AbrirModalNovo(Funcionarios? funcionario, DateTime? horario)
+    {
+        var inicio = horario ?? ProximoHorarioLivre();
+        agendamentoAtual = new Agendamentos
+        {
+            CodFuncionario = funcionario?.CodPessoa ?? (filtroFuncionario != 0 ? filtroFuncionario : 0),
+            Status = StatusAgendamento.Agendado
+        };
+        dataForm = inicio.Date;
+        horaForm = TimeOnly.FromDateTime(inicio);
+        mensagemErroModal = null;
+        modalFormAberto = true;
+    }
+
+    private DateTime ProximoHorarioLivre()
+    {
+        var agora = DateTime.Now;
+        if (diaSelecionado.Date != DateTime.Today) return diaSelecionado.Date.AddHours(9);
+        var minutos = (int)Math.Ceiling(agora.TimeOfDay.TotalMinutes / IntervaloSlot) * IntervaloSlot;
+        return DateTime.Today.AddMinutes(Math.Min(minutos, 23 * 60 + 30));
+    }
+
+    private void AbrirModalEditar(Agendamentos a)
+    {
+        agendamentoAtual = new Agendamentos
+        {
+            CodAgendamento = a.CodAgendamento,
+            CodCliente = a.CodCliente,
+            CodFuncionario = a.CodFuncionario,
+            CodServico = a.CodServico,
+            DataHoraInicio = a.DataHoraInicio,
+            Duracao = a.Duracao,
+            Valor = a.Valor,
+            Status = a.Status,
+            Observacoes = a.Observacoes,
+            DataCadastro = a.DataCadastro,
+            DataUltimaAlteracao = a.DataUltimaAlteracao,
+            UsuarioUltimaAlteracao = a.UsuarioUltimaAlteracao
+        };
+        dataForm = a.DataHoraInicio.Date;
+        horaForm = TimeOnly.FromDateTime(a.DataHoraInicio);
+        mensagemErroModal = null;
+        modalFormAberto = true;
+    }
+
+    private void FecharModalForm()
+    {
+        modalFormAberto = false;
+        modalExcluirAberto = false;
+        modalClientesAberto = modalFuncionariosAberto = modalServicosAberto = false;
+        agendamentoAtual = new Agendamentos();
+        mensagemErroModal = null;
+    }
+
+    private void SelecionarStatus(ChangeEventArgs e)
+    {
+        if (Enum.TryParse<StatusAgendamento>(e.Value?.ToString(), out var status))
+            agendamentoAtual.Status = status;
+    }
+
+    private void AbrirConsultaClientes()
+    {
+        termoCliente = string.Empty;
+        modalClientesAberto = true;
+    }
+
+    private void SelecionarCliente(Clientes cliente)
+    {
+        agendamentoAtual.CodCliente = cliente.CodPessoa;
+        modalClientesAberto = false;
+    }
+
+    private void AbrirConsultaFuncionarios()
+    {
+        termoFuncionario = string.Empty;
+        modalFuncionariosAberto = true;
+    }
+
+    private void SelecionarFuncionario(Funcionarios funcionario)
+    {
+        agendamentoAtual.CodFuncionario = funcionario.CodPessoa;
+        modalFuncionariosAberto = false;
+    }
+
+    private void AbrirConsultaServicos()
+    {
+        termoServico = string.Empty;
+        modalServicosAberto = true;
+    }
+
+    private void SelecionarServico(Servicos servico)
+    {
+        if (agendamentoAtual.CodServico != servico.CodServico)
+        {
+            agendamentoAtual.Duracao = servico.TempoMedio;
+            agendamentoAtual.Valor = servico.Preco;
+        }
+        agendamentoAtual.CodServico = servico.CodServico;
+        modalServicosAberto = false;
+    }
+
+    private async Task Salvar()
+    {
+        LimparMensagens();
+        mensagemErroModal = null;
+        agendamentoAtual.DataHoraInicio = dataForm.Date.Add(horaForm.ToTimeSpan());
+
+        try
+        {
+            if (agendamentoAtual.CodAgendamento == 0)
+                await agendamentosService.AddAgendamentoAsync(agendamentoAtual);
+            else
+                await agendamentosService.UpdateAgendamentoAsync(agendamentoAtual);
+
+            mensagemSucesso = "Agendamento salvo com sucesso.";
+            var dia = agendamentoAtual.DataHoraInicio.Date;
+            FecharModalForm();
+            diaSelecionado = dia;
+            await CarregarDia();
+        }
+        catch (Exception ex)
+        {
+            mensagemErroModal = ex.InnerException?.Message ?? ex.Message;
+        }
+    }
+
+    private async Task ConfirmarExclusao()
+    {
+        LimparMensagens();
+        try
+        {
+            await agendamentosService.DeleteAgendamentoAsync(agendamentoAtual.CodAgendamento);
+            mensagemSucesso = "Agendamento excluído.";
+            FecharModalForm();
+            await CarregarDia();
+        }
+        catch (Exception ex)
+        {
+            modalExcluirAberto = false;
+            mensagemErroModal = ex.InnerException?.Message ?? ex.Message;
+        }
+    }
+
+    private void LimparMensagens()
+    {
+        mensagemErro = null;
+        mensagemSucesso = null;
+    }
+}

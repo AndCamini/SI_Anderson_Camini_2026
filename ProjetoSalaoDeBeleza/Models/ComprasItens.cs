@@ -17,16 +17,27 @@ namespace ProjetoSalaoDeBeleza.Models
         public int CodProduto { get; set; }
         public Produtos? oProduto { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Quantidade deve ser maior que zero.")]
         public int Quantidade { get; set; } = 1;
 
-        [Column(TypeName = "decimal(10,2)")]
+        [Column(TypeName = "decimal(18,6)")]
         public decimal PrecoUnitario { get; set; } = 0;
 
-        [Column(TypeName = "decimal(10,2)")]
-        public decimal Desconto { get; set; } = 0;
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal DescontoPercentual { get; set; } = 0;
 
-        [Column(TypeName = "decimal(10,2)")]
-        public decimal Total => Math.Max(Quantidade * PrecoUnitario - Desconto, 0);
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal DescontoValor { get; set; } = 0;
+
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal CustoRateado { get; set; } = 0;
+
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal CustoUnitario { get; set; } = 0;
+
+        [NotMapped]
+        public decimal TotalBruto => Quantidade * PrecoUnitario;
+
+        [NotMapped]
+        public decimal Total => Math.Max(Math.Round(TotalBruto - DescontoValor, 2), 0);
     }
 }

@@ -9,7 +9,14 @@ main {
 }
 
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    --menu-destaque: #a9b8a0;
+    --menu-texto: #b9bbb6;
+    --menu-texto-forte: #ffffff;
+    --menu-icone: #7d8279;
+    --menu-borda: rgba(255, 255, 255, 0.08);
+    --menu-ativo-fundo: rgba(169, 184, 160, 0.14);
+    background: linear-gradient(180deg, #151515 0%, #0b0b0b 100%);
+    border-right: 1px solid #000;
 }
 
 .top-row {

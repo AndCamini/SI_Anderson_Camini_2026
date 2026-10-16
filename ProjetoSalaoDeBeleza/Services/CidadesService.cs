@@ -23,6 +23,8 @@ namespace ProjetoSalaoDeBeleza.Services
         {
             cidade.Cidade = cidade.Cidade?.ToUpper() ?? string.Empty;
 
+            Validar(cidade);
+
             if (await _context.Cidades.AnyAsync(c => c.Cidade == cidade.Cidade && c.CodEstado == cidade.CodEstado))
                 throw new Exception("Já existe uma cidade com esse nome neste estado.");
 
@@ -37,6 +39,8 @@ namespace ProjetoSalaoDeBeleza.Services
         public async Task UpdateCidadeAsync(Cidades cidade)
         {
             cidade.Cidade = cidade.Cidade?.ToUpper() ?? string.Empty;
+
+            Validar(cidade);
 
             if (await _context.Cidades.AnyAsync(c => c.Cidade == cidade.Cidade && c.CodEstado == cidade.CodEstado && c.CodCidade != cidade.CodCidade))
                 throw new Exception("Já existe uma cidade com esse nome neste estado.");
@@ -55,11 +59,27 @@ namespace ProjetoSalaoDeBeleza.Services
 
         public async Task DeleteCidadeAsync(int id)
         {
+            if (await _context.Pessoas.AnyAsync(p => p.CodCidade == id) ||
+                await _context.Fornecedores.AnyAsync(f => f.CodCidade == id) ||
+                await _context.Transportadores.AnyAsync(t => t.CodCidade == id))
+                throw new Exception("Não é possível excluir uma cidade vinculada a clientes, funcionários, fornecedores ou transportadores.");
+
             var cidade = await _context.Cidades.FindAsync(id);
             if (cidade == null) throw new Exception("Cidade não encontrada.");
 
             _context.Cidades.Remove(cidade);
             await _context.SaveChangesAsync();
+        }
+
+        private static void Validar(Cidades cidade)
+        {
+            Validacoes.ValidarObrigatorio(cidade.Cidade, "Nome da cidade é obrigatório.");
+
+            if (cidade.CodEstado == 0)
+                throw new Exception("Selecione um estado.");
+
+            if (cidade.DDD.HasValue && (cidade.DDD < 11 || cidade.DDD > 99))
+                throw new Exception("DDD inválido. Informe um valor entre 11 e 99.");
         }
     }
 }

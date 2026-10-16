@@ -20,6 +20,8 @@ namespace ProjetoSalaoDeBeleza.Services
         {
             marca.MarcaVeiculo = marca.MarcaVeiculo?.ToUpper() ?? string.Empty;
 
+            Validacoes.ValidarObrigatorio(marca.MarcaVeiculo, "Nome da marca é obrigatório.");
+
             var duplicada = await _context.MarcasVeiculos
                 .AnyAsync(m => m.MarcaVeiculo == marca.MarcaVeiculo);
             if (duplicada) throw new Exception("Já existe uma marca com esse nome.");
@@ -35,6 +37,11 @@ namespace ProjetoSalaoDeBeleza.Services
         public async Task UpdateMarcaAsync(MarcasVeiculos marca)
         {
             marca.MarcaVeiculo = marca.MarcaVeiculo?.ToUpper() ?? string.Empty;
+
+            Validacoes.ValidarObrigatorio(marca.MarcaVeiculo, "Nome da marca é obrigatório.");
+
+            if (await _context.MarcasVeiculos.AnyAsync(m => m.MarcaVeiculo == marca.MarcaVeiculo && m.CodMarca != marca.CodMarca))
+                throw new Exception("Já existe uma marca com esse nome.");
 
             var existente = await _context.MarcasVeiculos.FindAsync(marca.CodMarca);
             if (existente == null) throw new Exception("Marca não encontrada.");

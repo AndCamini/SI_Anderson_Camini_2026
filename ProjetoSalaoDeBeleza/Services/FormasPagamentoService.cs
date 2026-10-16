@@ -20,6 +20,8 @@ namespace ProjetoSalaoDeBeleza.Services
         {
             forma.FormaPagamento = forma.FormaPagamento?.ToUpper() ?? string.Empty;
 
+            Validacoes.ValidarObrigatorio(forma.FormaPagamento, "Descrição da forma de pagamento é obrigatória.");
+
             var duplicada = await _context.FormasPagamento
                 .AnyAsync(f => f.FormaPagamento == forma.FormaPagamento);
             if (duplicada) throw new Exception("Já existe uma forma de pagamento com essa descrição.");
@@ -35,6 +37,8 @@ namespace ProjetoSalaoDeBeleza.Services
         public async Task UpdateFormaPagamentoAsync(FormasPagamento forma)
         {
             forma.FormaPagamento = forma.FormaPagamento?.ToUpper() ?? string.Empty;
+
+            Validacoes.ValidarObrigatorio(forma.FormaPagamento, "Descrição da forma de pagamento é obrigatória.");
 
             var duplicada = await _context.FormasPagamento
                 .AnyAsync(f => f.FormaPagamento == forma.FormaPagamento
@@ -54,6 +58,9 @@ namespace ProjetoSalaoDeBeleza.Services
 
         public async Task DeleteFormaPagamentoAsync(int id)
         {
+            if (await _context.Compras.AnyAsync(c => c.CodFormaPagamento == id))
+                throw new Exception("Não é possível excluir uma forma de pagamento usada em compras. Desative o cadastro.");
+
             var forma = await _context.FormasPagamento.FindAsync(id);
             if (forma == null) throw new Exception("Forma de pagamento não encontrada.");
 

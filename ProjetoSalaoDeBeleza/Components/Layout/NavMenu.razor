@@ -3,141 +3,135 @@
 
 @inject NavigationManager NavigationManager
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Emerson Correa Hair</a>
-    </div>
+<div class="brand-row">
+    <a class="brand" href="">
+        <svg class="brand-mecha" viewBox="0 0 40 64" aria-hidden="true">
+            <path d="M24 2 C8 16 6 36 20 62" />
+            <path d="M28 6 C14 20 13 38 26 60" />
+            <path d="M32 12 C21 24 20 40 31 56" />
+            <path d="M35 20 C28 29 27 40 35 50" />
+        </svg>
+        <span class="brand-texto">
+            <span class="brand-nome">EMERSON</span>
+            <span class="brand-linha">
+                <span class="brand-hair">HAIR</span>
+                <span class="brand-correa">Correa</span>
+            </span>
+        </span>
+    </a>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+<input type="checkbox" title="Menu de navegação" class="navbar-toggler" />
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
+    <nav class="menu">
+        <NavLink class="menu-link" href="" Match="NavLinkMatch.All">
+            <i class="bi bi-house-door" aria-hidden="true"></i>
+            <span>Início</span>
+        </NavLink>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" @onclick="ToggleLocalidade" style="cursor: pointer;">
-                <span class="bi bi-globe" aria-hidden="true"></span> Localidades
-            </NavLink>
-        </div>
-        @if (expandirLocalidade)
-        {
-            <div class="nav-item px-3" style="margin-left: 1.5rem;">
-                <NavLink class="nav-link" href="paises">
-                    <span class="bi bi-flag" aria-hidden="true"></span> Países
-                </NavLink>
-            </div>
-            <div class="nav-item px-3" style="margin-left: 1.5rem;">
-                <NavLink class="nav-link" href="estados">
-                    <span class="bi bi-map" aria-hidden="true"></span> Estados
-                </NavLink>
-            </div>
-            <div class="nav-item px-3" style="margin-left: 1.5rem;">
-                <NavLink class="nav-link" href="cidades">
-                    <span class="bi bi-building" aria-hidden="true"></span> Cidades
-                </NavLink>
-            </div>
-        }
+        <NavLink class="menu-link" href="agenda">
+            <i class="bi bi-calendar3" aria-hidden="true"></i>
+            <span>Agenda</span>
+        </NavLink>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" @onclick="ToggleCadastro" style="cursor: pointer;">
-                <span class="bi bi-person-lines-fill" aria-hidden="true"></span> Cadastros
-            </NavLink>
-        </div>
-        @if (expandirCadastro)
+        @foreach (var grupo in grupos)
         {
-            <div class="nav-item px-3" style="margin-left: 1.5rem;">
-                <NavLink class="nav-link" href="clientes">
-                    <span class="bi bi-people" aria-hidden="true"></span> Clientes
-                </NavLink>
-            </div>
-            <div class="nav-item px-3" style="margin-left: 1.5rem;">
-                <NavLink class="nav-link" href="funcionarios">
-                    <span class="bi bi-person-badge" aria-hidden="true"></span> Funcionários
-                </NavLink>
-            </div>
-            <div class="nav-item px-3" style="margin-left: 1.5rem;">
-                <NavLink class="nav-link" href="categorias">
-                    <span class="bi bi-tag" aria-hidden="true"></span> Categorias
-                </NavLink>
-            </div>
-            <div class="nav-item px-3" style="margin-left: 1.5rem;">
-                <NavLink class="nav-link" href="produtos">
-                    <span class="bi bi-box-seam" aria-hidden="true"></span> Produtos
-                </NavLink>
-            </div>
-            <div class="nav-item px-3" style="margin-left: 1.5rem;">
-                <NavLink class="nav-link" href="fornecedores">
-                    <span class="bi bi-truck" aria-hidden="true"></span> Fornecedores
-                </NavLink>
-            </div>
-            <div class="nav-item px-3" style="margin-left: 1.5rem;">
-                <NavLink class="nav-link" href="transportadores">
-                    <span class="bi bi-car-front" aria-hidden="true"></span> Transportadores
-                </NavLink>
-            </div>
-            <div class="nav-item px-3" style="margin-left: 1.5rem;">
-                <NavLink class="nav-link" href="veiculos">
-                    <span class="bi bi-speedometer2" aria-hidden="true"></span> Veículos
-                </NavLink>
-            </div>
-        }
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" @onclick="ToggleFinanceiro" style="cursor: pointer;">
-                <span class="bi bi-cash-coin" aria-hidden="true"></span> Financeiro
-            </NavLink>
-        </div>
-        @if (expandirFinanceiro)
-        {
-            <div class="nav-item px-3" style="margin-left: 1.5rem; white-space: nowrap;">
-                <NavLink class="nav-link" href="condicoes-pagamento">
-                    <span class="bi bi-credit-card" aria-hidden="true"></span> Condições de Pagamento
-                </NavLink>
-            </div>
-            <div class="nav-item px-3" style="margin-left: 1.5rem; white-space: nowrap;">
-                <NavLink class="nav-link" href="formas-pagamento">
-                    <span class="bi bi-credit-card-2-front" aria-hidden="true"></span> Formas de Pagamento
-                </NavLink>
-            </div>
-            <div class="nav-item px-3" style="margin-left: 1.5rem; white-space: nowrap;">
-                <NavLink class="nav-link" href="compras">
-                    <span class="bi bi-cart me-1" aria-hidden="true"></span> Compras
-                </NavLink>
+            var aberto = gruposAbertos.Contains(grupo.Titulo);
+            <div class="menu-grupo @(aberto ? "aberto" : "") @(GrupoAtivo(grupo) ? "ativo" : "")">
+                <button type="button" class="menu-grupo-titulo" @onclick="() => AlternarGrupo(grupo.Titulo)" @onclick:stopPropagation="true">
+                    <i class="bi @grupo.Icone" aria-hidden="true"></i>
+                    <span>@grupo.Titulo</span>
+                    <i class="bi bi-chevron-down menu-seta" aria-hidden="true"></i>
+                </button>
+                @if (aberto)
+                {
+                    <div class="menu-itens">
+                        @foreach (var item in grupo.Itens)
+                        {
+                            <NavLink class="menu-link menu-subitem" href="@item.Href">
+                                <i class="bi @item.Icone" aria-hidden="true"></i>
+                                <span>@item.Titulo</span>
+                            </NavLink>
+                        }
+                    </div>
+                }
             </div>
         }
     </nav>
+
+    <div class="menu-rodape">
+        <i class="bi bi-instagram" aria-hidden="true"></i> emer_soncorreahair
+    </div>
 </div>
 
 @code {
-    private string? currentUrl;
+    private record ItemMenu(string Titulo, string Href, string Icone);
+    private record GrupoMenu(string Titulo, string Icone, ItemMenu[] Itens);
+
+    private readonly GrupoMenu[] grupos =
+    {
+        new("Localidades", "bi-globe2", new ItemMenu[]
+        {
+            new("Países", "paises", "bi-flag"),
+            new("Estados", "estados", "bi-map"),
+            new("Cidades", "cidades", "bi-geo-alt")
+        }),
+        new("Cadastros", "bi-person-vcard", new ItemMenu[]
+        {
+            new("Clientes", "clientes", "bi-people"),
+            new("Funcionários", "funcionarios", "bi-person-badge"),
+            new("Categorias", "categorias", "bi-tags"),
+            new("Produtos", "produtos", "bi-box-seam"),
+            new("Serviços", "servicos", "bi-scissors"),
+            new("Fornecedores", "fornecedores", "bi-building"),
+            new("Transportadores", "transportadores", "bi-truck"),
+            new("Veículos", "veiculos", "bi-car-front")
+        }),
+        new("Financeiro", "bi-cash-coin", new ItemMenu[]
+        {
+            new("Condições de Pagamento", "condicoes-pagamento", "bi-credit-card"),
+            new("Formas de Pagamento", "formas-pagamento", "bi-wallet2"),
+            new("Compras", "compras", "bi-cart3")
+        })
+    };
+
+    private readonly HashSet<string> gruposAbertos = new();
+    private string currentUrl = string.Empty;
 
     protected override void OnInitialized()
     {
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        AbrirGrupoAtual();
         NavigationManager.LocationChanged += OnLocationChanged;
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
-        StateHasChanged();
+        AbrirGrupoAtual();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void AbrirGrupoAtual()
+    {
+        var grupo = grupos.FirstOrDefault(GrupoAtivo);
+        if (grupo != null) gruposAbertos.Add(grupo.Titulo);
+    }
+
+    private bool GrupoAtivo(GrupoMenu grupo)
+    {
+        var rota = currentUrl.Split('?', '#')[0];
+        return grupo.Itens.Any(i => rota.Equals(i.Href, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void AlternarGrupo(string titulo)
+    {
+        if (!gruposAbertos.Remove(titulo)) gruposAbertos.Add(titulo);
     }
 
     public void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
-
-    private bool expandirLocalidade = false;
-    private bool expandirCadastro = false;
-    private bool expandirFinanceiro = false;
-
-    private void ToggleLocalidade() => expandirLocalidade = !expandirLocalidade;
-    private void ToggleCadastro() => expandirCadastro = !expandirCadastro;
-    private void ToggleFinanceiro() => expandirFinanceiro = !expandirFinanceiro;
 }

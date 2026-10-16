@@ -5,6 +5,7 @@
 @inject FornecedoresService fornecedoresService
 @inject CidadesService cidadesService
 @inject EstadosService estadosService
+@inject CondicaoPagamentoService condicaoPagamentoService
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="mb-0">Fornecedores</h3>
@@ -65,7 +66,7 @@
 @if (modalFormAberto)
 {
     <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">@(fornecedorAtual.CodFornecedor == 0 ? "Novo Fornecedor" : "Editar Fornecedor")</h5>
@@ -78,123 +79,87 @@
                         {
                             <div class="alert alert-danger">@mensagemErroModal</div>
                         }
-                        <div class="row">
-                            <div class="col-md-8 mb-3">
-                                <label class="form-label">Razão Social</label>
-                                <InputText @bind-Value="fornecedorAtual.RazaoSocial" class="form-control" />
+                        <div class="row g-3">
+                            <div class="col-auto">
+                                <label class="form-label d-block">Status</label>
+                                <div class="form-check form-switch mt-2">
+                                    <InputCheckbox @bind-Value="fornecedorAtual.Ativo" class="form-check-input" role="switch" id="ativoCheckForn" />
+                                    <label class="form-check-label @(fornecedorAtual.Ativo ? "text-success" : "text-muted")" for="ativoCheckForn">@(fornecedorAtual.Ativo ? "Ativo" : "Inativo")</label>
+                                </div>
+                            </div>
+                            <div class="w-100 mt-0"></div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">Razão Social <span class="text-danger">*</span></label>
+                                <InputText @bind-Value="fornecedorAtual.RazaoSocial" class="form-control" placeholder="Digite a razão social" />
                                 <ValidationMessage For="@(() => fornecedorAtual.RazaoSocial)" />
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">CNPJ</label>
-                                <InputText @bind-Value="fornecedorAtual.CNPJ" class="form-control" maxlength="14" />
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">Nome Fantasia</label>
+                                <InputText @bind-Value="fornecedorAtual.NomeFantasia" class="form-control" placeholder="Nome fantasia" />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">CNPJ <span class="text-danger">*</span></label>
+                                <InputText @bind-Value="fornecedorAtual.CNPJ" class="form-control" maxlength="14" placeholder="Somente números" />
                                 <ValidationMessage For="@(() => fornecedorAtual.CNPJ)" />
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Nome Fantasia</label>
-                                <InputText @bind-Value="fornecedorAtual.NomeFantasia" class="form-control" />
-                            </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-12 col-md-6">
                                 <label class="form-label">Inscrição Estadual</label>
-                                <InputText @bind-Value="fornecedorAtual.InscricaoEstadual" class="form-control" maxlength="20" />
+                                <InputText @bind-Value="fornecedorAtual.InscricaoEstadual" class="form-control" maxlength="20" placeholder="Número da I.E." />
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Email</label>
-                                <InputText @bind-Value="fornecedorAtual.Email" class="form-control" />
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <label class="form-label">Telefone</label>
-                                <InputText @bind-Value="fornecedorAtual.Telefone" class="form-control" maxlength="15" />
-                            </div>
-                            <div class="col-md-3 mb-3">
+                            <div class="col-4 col-md-2">
                                 <label class="form-label">CEP</label>
-                                <InputText @bind-Value="fornecedorAtual.CEP" class="form-control" maxlength="8" />
+                                <InputText @bind-Value="fornecedorAtual.CEP" class="form-control" maxlength="8" placeholder="Somente números" />
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Rua</label>
-                                <InputText @bind-Value="fornecedorAtual.Rua" class="form-control" />
+                            <div class="col-8 col-md-8">
+                                <label class="form-label">Logradouro</label>
+                                <InputText @bind-Value="fornecedorAtual.Rua" class="form-control" placeholder="Rua, avenida, alameda..." />
                             </div>
-                            <div class="col-md-2 mb-3">
+                            <div class="col-12 col-md-2">
                                 <label class="form-label">Número</label>
-                                <InputText @bind-Value="fornecedorAtual.Numero" class="form-control" maxlength="10" />
+                                <InputText @bind-Value="fornecedorAtual.Numero" class="form-control" maxlength="10" placeholder="Nº" />
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Complemento</label>
-                                <InputText @bind-Value="fornecedorAtual.Complemento" class="form-control" />
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Bairro</label>
-                                <InputText @bind-Value="fornecedorAtual.Bairro" class="form-control" />
-                            </div>
-                            <div class="row align-items-end mb-3">
-                                <div class="col">
-                                    <label class="form-label">Cidade</label>
-                                    <InputSelect @bind-Value="fornecedorAtual.CodCidade" class="form-select">
-                                        <option value="0">Selecione...</option>
-                                        @foreach (var cidade in listaCidades)
-                                        {
-                                            <option value="@cidade.CodCidade">@cidade.Cidade</option>
-                                        }
-                                    </InputSelect>
-                                </div>
-                                <div class="col-auto">
-                                    <button type="button" class="btn btn-outline-secondary"
-                                            @onclick="() => modalNovaCidadeAberto = true">
-                                        + Nova
+                            <div class="col-12 col-md-4">
+                                <label class="form-label">Cidade <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input class="form-control" readonly value="@CidadeSelecionadaTexto" placeholder="Selecionar cidade..." />
+                                    <button type="button" class="btn btn-outline-secondary" @onclick="AbrirConsultaCidades">
+                                        <i class="bi bi-search"></i>
                                     </button>
                                 </div>
                             </div>
-
-                            @* Mini-modal Nova Cidade *@
-                            @if (modalNovaCidadeAberto)
-                            {
-                                <div class="card border-primary mb-3">
-                                    <div class="card-header bg-primary text-white d-flex justify-content-between">
-                                        <span>Nova Cidade</span>
-                                        <button type="button" class="btn-close btn-close-white btn-sm"
-                                                @onclick="() => { modalNovaCidadeAberto = false; novaCidade = new(); erroNovaCidade = null; }"></button>
-                                    </div>
-                                    <div class="card-body">
-                                        @if (!string.IsNullOrEmpty(erroNovaCidade))
-                                        {
-                                            <div class="alert alert-danger py-1">@erroNovaCidade</div>
-                                        }
-                                        <div class="row">
-                                            <div class="col-md-5 mb-2">
-                                                <label class="form-label">Nome</label>
-                                                <InputText @bind-Value="novaCidade.Cidade" class="form-control" />
-                                            </div>
-                                            <div class="col-md-5 mb-2">
-                                                <label class="form-label">Estado</label>
-                                                <InputSelect @bind-Value="novaCidade.CodEstado" class="form-select">
-                                                    <option value="0">Selecione...</option>
-                                                    @foreach (var estado in listaEstados)
-                                                    {
-                                                        <option value="@estado.CodEstado">@estado.Estado - @estado.UF</option>
-                                                    }
-                                                </InputSelect>
-                                            </div>
-                                            <div class="col-md-2 mb-2">
-                                                <label class="form-label">DDD</label>
-                                                <InputNumber @bind-Value="novaCidade.DDD" class="form-control" />
-                                            </div>
-                                        </div>
-                                        <button type="button" class="btn btn-primary btn-sm mt-1" @onclick="SalvarNovaCidade">Salvar</button>
-                                    </div>
-                                </div>
-                            }
+                            <div class="w-100 mt-0"></div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">Complemento</label>
+                                <InputText @bind-Value="fornecedorAtual.Complemento" class="form-control" placeholder="Apto, bloco, sala..." />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">Bairro</label>
+                                <InputText @bind-Value="fornecedorAtual.Bairro" class="form-control" placeholder="Bairro" />
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label">Condição de Pagamento</label>
+                                <InputSelect @bind-Value="fornecedorAtual.CodCondicaoPagamento" class="form-select">
+                                    <option value="">Selecionar...</option>
+                                    @foreach (var cp in listaCondicoes)
+                                    {
+                                        <option value="@cp.CodCondicao">@cp.Descricao</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="w-100 mt-0"></div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">E-mail</label>
+                                <InputText @bind-Value="fornecedorAtual.Email" class="form-control" placeholder="email@exemplo.com" />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">Telefone</label>
+                                <InputText @bind-Value="fornecedorAtual.Telefone" class="form-control" maxlength="15" placeholder="(00) 00000-0000" />
+                            </div>
                         </div>
                         @if (fornecedorAtual.CodFornecedor != 0)
                         {
-                            <hr class="my-2" />
-                            <div class="row text-muted small">
+                            <hr class="my-3" />
+                            <div class="row g-3 text-muted small">
                                 <div class="col-md-4">
                                     <label class="form-label">Cadastrado em</label>
                                     <input type="text" class="form-control form-control-sm"
@@ -212,16 +177,102 @@
                                 </div>
                             </div>
                         }
-                        <div class="mb-3 form-check">
-                            <InputCheckbox @bind-Value="fornecedorAtual.Ativo" class="form-check-input" id="ativoCheckForn" />
-                            <label class="form-check-label" for="ativoCheckForn">Ativo</label>
-                        </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="FecharModalForm">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar</button>
+                        <button type="submit" class="btn btn-dark px-4">Salvar</button>
+                        <button type="button" class="btn btn-link text-secondary text-decoration-none" @onclick="FecharModalForm">Cancelar</button>
                     </div>
                 </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@if (modalCidadesAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5); z-index:1060">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-geo-alt me-2"></i>Cidades</h5>
+                    <button type="button" class="btn-close" @onclick="() => modalCidadesAberto = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex gap-2 mb-3">
+                        <input class="form-control" placeholder="Buscar por código, cidade ou UF"
+                               @bind="termoCidade" @bind:event="oninput" />
+                        <button type="button" class="btn btn-outline-secondary text-nowrap"
+                                @onclick="() => { cadastroCidadeAberto = !cadastroCidadeAberto; erroNovaCidade = null; }">
+                            + Nova cidade
+                        </button>
+                    </div>
+
+                    @if (cadastroCidadeAberto)
+                    {
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">Nova cidade</div>
+                            <div class="card-body">
+                                @if (!string.IsNullOrEmpty(erroNovaCidade))
+                                {
+                                    <div class="alert alert-danger py-1">@erroNovaCidade</div>
+                                }
+                                <div class="row g-2">
+                                    <div class="col-md-5">
+                                        <label class="form-label">Nome</label>
+                                        <InputText @bind-Value="novaCidade.Cidade" class="form-control form-control-sm" />
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label">Estado</label>
+                                        <InputSelect @bind-Value="novaCidade.CodEstado" class="form-select form-select-sm">
+                                            <option value="0">Selecione...</option>
+                                            @foreach (var estado in listaEstados)
+                                            {
+                                                <option value="@estado.CodEstado">@estado.Estado - @estado.UF</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">DDD</label>
+                                        <InputNumber @bind-Value="novaCidade.DDD" class="form-control form-control-sm text-end" />
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm mt-2" @onclick="SalvarNovaCidade">Salvar</button>
+                            </div>
+                        </div>
+                    }
+
+                    <table class="table table-sm table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Cód.</th>
+                                <th>Cidade</th>
+                                <th>UF</th>
+                                <th class="text-end">DDD</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!CidadesFiltradas.Any())
+                            {
+                                <tr><td colspan="5" class="text-center text-muted py-3">Nenhuma cidade encontrada.</td></tr>
+                            }
+                            @foreach (var c in CidadesFiltradas)
+                            {
+                                <tr class="@(fornecedorAtual.CodCidade == c.CodCidade ? "table-primary" : "")">
+                                    <td>@c.CodCidade</td>
+                                    <td>@c.Cidade</td>
+                                    <td>@c.oEstado?.UF</td>
+                                    <td class="text-end">@c.DDD</td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-primary btn-sm" @onclick="() => SelecionarCidade(c)">
+                                            Selecionar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -265,6 +316,7 @@
 @code {
     private List<Fornecedores> listaFornecedores = new();
     private List<Cidades> listaCidades = new();
+    private List<CondicaoPagamento> listaCondicoes = new();
     private Fornecedores fornecedorAtual = new();
     private Fornecedores? fornecedorExcluir;
     private bool modalFormAberto = false;
@@ -274,13 +326,53 @@
     private string? mensagemErroModal;
     private List<Estados> listaEstados = new();
     private Cidades novaCidade = new();
-    private bool modalNovaCidadeAberto = false;
+    private bool modalCidadesAberto;
+    private bool cadastroCidadeAberto;
+    private string termoCidade = string.Empty;
     private string? erroNovaCidade;
+
+    private IEnumerable<Cidades> CidadesFiltradas
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(termoCidade)) return listaCidades;
+
+            var termo = termoCidade.Trim().ToUpper();
+            return listaCidades.Where(c =>
+                c.CodCidade.ToString() == termo ||
+                (c.Cidade ?? "").ToUpper().Contains(termo) ||
+                (c.oEstado?.UF ?? "").ToUpper() == termo);
+        }
+    }
+
+    private string CidadeSelecionadaTexto
+    {
+        get
+        {
+            var cidade = listaCidades.FirstOrDefault(c => c.CodCidade == fornecedorAtual.CodCidade);
+            return cidade == null ? "" : $"{cidade.CodCidade} - {cidade.Cidade} - {cidade.oEstado?.UF}";
+        }
+    }
+
+    private void AbrirConsultaCidades()
+    {
+        termoCidade = string.Empty;
+        cadastroCidadeAberto = false;
+        erroNovaCidade = null;
+        modalCidadesAberto = true;
+    }
+
+    private void SelecionarCidade(Cidades cidade)
+    {
+        fornecedorAtual.CodCidade = cidade.CodCidade;
+        modalCidadesAberto = false;
+    }
 
     protected override async Task OnInitializedAsync()
     {
         listaCidades = await cidadesService.GetCidadesAsync();
         listaEstados = await estadosService.GetEstadosAsync();
+        listaCondicoes = (await condicaoPagamentoService.GetCondicoesPagamentoAsync()).Where(c => c.Ativo).ToList();
         await CarregarFornecedores();
     }
 
@@ -313,6 +405,7 @@
             Complemento = f.Complemento,
             Bairro = f.Bairro,
             CodCidade = f.CodCidade,
+            CodCondicaoPagamento = f.CodCondicaoPagamento,
             DataCadastro = f.DataCadastro,
             DataUltimaAlteracao = f.DataUltimaAlteracao,
             UsuarioUltimaAlteracao = f.UsuarioUltimaAlteracao,
@@ -378,11 +471,10 @@
         {
             await cidadesService.AddCidadeAsync(novaCidade);
             listaCidades = await cidadesService.GetCidadesAsync();
-            fornecedorAtual.CodCidade = listaCidades
-                .First(c => c.Cidade == novaCidade.Cidade.ToUpper() && c.CodEstado == novaCidade.CodEstado)
-                .CodCidade;
+            var criada = listaCidades.FirstOrDefault(c => c.Cidade == novaCidade.Cidade.ToUpper() && c.CodEstado == novaCidade.CodEstado);
             novaCidade = new Cidades();
-            modalNovaCidadeAberto = false;
+            cadastroCidadeAberto = false;
+            if (criada != null) SelecionarCidade(criada);
         }
         catch (Exception ex)
         {

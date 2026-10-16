@@ -31,6 +31,8 @@ namespace ProjetoSalaoDeBeleza.Services
             funcionario.Bairro = funcionario.Bairro?.ToUpper();
             funcionario.Complemento = funcionario.Complemento?.ToUpper();
 
+            Validar(funcionario);
+
             if (!string.IsNullOrWhiteSpace(funcionario.CPF) &&
                 await _dbContext.Pessoas.AnyAsync(p => p.CPF == funcionario.CPF))
                 throw new Exception("Já existe uma pessoa cadastrada com este CPF/CNPJ.");
@@ -56,6 +58,8 @@ namespace ProjetoSalaoDeBeleza.Services
             funcionario.Logradouro = funcionario.Logradouro?.ToUpper();
             funcionario.Bairro = funcionario.Bairro?.ToUpper();
             funcionario.Complemento = funcionario.Complemento?.ToUpper();
+
+            Validar(funcionario);
 
             if (!string.IsNullOrWhiteSpace(funcionario.CPF) &&
                 await _dbContext.Pessoas.AnyAsync(p => p.CPF == funcionario.CPF && p.CodPessoa != funcionario.CodPessoa))
@@ -94,11 +98,35 @@ namespace ProjetoSalaoDeBeleza.Services
 
         public async Task DeleteFuncionarioAsync(int id)
         {
+            if (await _dbContext.Agendamentos.AnyAsync(a => a.CodFuncionario == id))
+                throw new Exception("Não é possível excluir um funcionário que possui agendamentos. Desative o cadastro.");
+
             var funcionario = await _dbContext.Funcionarios.FindAsync(id);
             if (funcionario == null) throw new Exception("Funcionário não encontrado.");
 
             _dbContext.Funcionarios.Remove(funcionario);
             await _dbContext.SaveChangesAsync();
+        }
+
+        private static void Validar(Funcionarios funcionario)
+        {
+            Validacoes.ValidarPessoa(funcionario, true);
+
+            if (funcionario.Salario < 0)
+                throw new Exception("Salário não pode ser negativo.");
+
+            if (funcionario.ComissaoPercentual < 0 || funcionario.ComissaoPercentual > 100)
+                throw new Exception("Comissão deve ser entre 0% e 100%.");
+
+            if (funcionario.DataAdmissao == default)
+                throw new Exception("Informe a data de admissão.");
+
+            if (funcionario.DataNascimento != default &&
+                funcionario.DataAdmissao.Date < funcionario.DataNascimento.Date.AddYears(14))
+                throw new Exception("O funcionário deve ter ao menos 14 anos na data de admissão.");
+
+            if (funcionario.DataDemissao.HasValue && funcionario.DataDemissao.Value.Date < funcionario.DataAdmissao.Date)
+                throw new Exception("Data de demissão não pode ser anterior à data de admissão.");
         }
     }
 }

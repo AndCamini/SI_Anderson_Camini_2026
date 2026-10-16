@@ -20,6 +20,8 @@ namespace ProjetoSalaoDeBeleza.Services
         {
             tipo.Tipo = tipo.Tipo?.ToUpper() ?? string.Empty;
 
+            Validacoes.ValidarObrigatorio(tipo.Tipo, "Descrição do tipo é obrigatória.");
+
             var duplicado = await _context.TiposVeiculos
                 .AnyAsync(t => t.Tipo == tipo.Tipo);
             if (duplicado) throw new Exception("Já existe um tipo com esse nome.");
@@ -35,6 +37,11 @@ namespace ProjetoSalaoDeBeleza.Services
         public async Task UpdateTipoAsync(TiposVeiculos tipo)
         {
             tipo.Tipo = tipo.Tipo?.ToUpper() ?? string.Empty;
+
+            Validacoes.ValidarObrigatorio(tipo.Tipo, "Descrição do tipo é obrigatória.");
+
+            if (await _context.TiposVeiculos.AnyAsync(t => t.Tipo == tipo.Tipo && t.CodTipo != tipo.CodTipo))
+                throw new Exception("Já existe um tipo com esse nome.");
 
             var existente = await _context.TiposVeiculos.FindAsync(tipo.CodTipo);
             if (existente == null) throw new Exception("Tipo não encontrado.");

@@ -17,7 +17,7 @@ namespace ProjetoSalaoDeBeleza.Models
         public int Numero { get; set; }
         public DateTime Vencimento { get; set; }
 
-        [Column(TypeName = "decimal(10,2)")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal Valor { get; set; }
     }
 }

@@ -124,97 +124,25 @@
                             </div>
                         </div>
 
-                        <div class="row align-items-end mb-3">
-                            <div class="col">
-                                <label class="form-label">Marca</label>
-                                <InputSelect @bind-Value="veiculoAtual.CodMarca" class="form-select">
-                                    <option value="0">Selecione...</option>
-                                    @foreach (var m in listaMarcas)
-                                    {
-                                        <option value="@m.CodMarca">@m.MarcaVeiculo</option>
-                                    }
-                                </InputSelect>
-                            </div>
-                            <div class="col-auto">
-                                <button type="button" class="btn btn-outline-secondary"
-                                        @onclick="() => modalNovaMarcaAberto = true">
-                                    + Nova
+                        <div class="mb-3">
+                            <label class="form-label">Marca</label>
+                            <div class="input-group">
+                                <input class="form-control" readonly value="@MarcaSelecionadaTexto" placeholder="Nenhuma selecionada" />
+                                <button type="button" class="btn btn-outline-secondary" @onclick="AbrirConsultaMarcas">
+                                    <i class="bi bi-search"></i>
                                 </button>
                             </div>
                         </div>
 
-                        @* Mini-modal Nova Marca *@
-                        @if (modalNovaMarcaAberto)
-                        {
-                            <div class="card border-primary mb-3">
-                                <div class="card-header bg-primary text-white d-flex justify-content-between">
-                                    <span>Nova Marca</span>
-                                    <button type="button" class="btn-close btn-close-white btn-sm"
-                                            @onclick="() => { modalNovaMarcaAberto = false; novaMarca = new(); }"></button>
-                                </div>
-                                <div class="card-body">
-                                    @if (!string.IsNullOrEmpty(erroNovaMarca))
-                                    {
-                                        <div class="alert alert-danger py-1">@erroNovaMarca</div>
-                                    }
-                                    <div class="row align-items-end">
-                                        <div class="col mb-2">
-                                            <label class="form-label">Nome da Marca</label>
-                                            <InputText @bind-Value="novaMarca.MarcaVeiculo" class="form-control" />
-                                        </div>
-                                        <div class="col-auto mb-2">
-                                            <button type="button" class="btn btn-primary" @onclick="SalvarNovaMarca">Salvar</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-
-                        <div class="row align-items-end mb-3">
-                            <div class="col">
-                                <label class="form-label">Tipo</label>
-                                <InputSelect @bind-Value="veiculoAtual.CodTipo" class="form-select">
-                                    <option value="0">Selecione...</option>
-                                    @foreach (var t in listaTipos)
-                                    {
-                                        <option value="@t.CodTipo">@t.Tipo</option>
-                                    }
-                                </InputSelect>
-                            </div>
-                            <div class="col-auto">
-                                <button type="button" class="btn btn-outline-secondary"
-                                        @onclick="() => modalNovoTipoAberto = true">
-                                    + Novo
+                        <div class="mb-3">
+                            <label class="form-label">Tipo</label>
+                            <div class="input-group">
+                                <input class="form-control" readonly value="@TipoSelecionadoTexto" placeholder="Nenhum selecionado" />
+                                <button type="button" class="btn btn-outline-secondary" @onclick="AbrirConsultaTipos">
+                                    <i class="bi bi-search"></i>
                                 </button>
                             </div>
                         </div>
-
-                        @* Mini-modal Novo Tipo *@
-                        @if (modalNovoTipoAberto)
-                        {
-                            <div class="card border-primary mb-3">
-                                <div class="card-header bg-primary text-white d-flex justify-content-between">
-                                    <span>Novo Tipo</span>
-                                    <button type="button" class="btn-close btn-close-white btn-sm"
-                                            @onclick="() => { modalNovoTipoAberto = false; novoTipo = new(); }"></button>
-                                </div>
-                                <div class="card-body">
-                                    @if (!string.IsNullOrEmpty(erroNovoTipo))
-                                    {
-                                        <div class="alert alert-danger py-1">@erroNovoTipo</div>
-                                    }
-                                    <div class="row align-items-end">
-                                        <div class="col mb-2">
-                                            <label class="form-label">Descrição do Tipo</label>
-                                            <InputText @bind-Value="novoTipo.Tipo" class="form-control" />
-                                        </div>
-                                        <div class="col-auto mb-2">
-                                            <button type="button" class="btn btn-primary" @onclick="SalvarNovoTipo">Salvar</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        }
 
                         <div class="mb-3">
                             <label class="form-label">Transportador</label>
@@ -257,6 +185,154 @@
                         <button type="submit" class="btn btn-primary">Salvar</button>
                     </div>
                 </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@if (modalMarcasAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5); z-index:1060">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-tags me-2"></i>Marcas</h5>
+                    <button type="button" class="btn-close" @onclick="() => modalMarcasAberto = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex gap-2 mb-3">
+                        <input class="form-control" placeholder="Buscar por código ou nome"
+                               @bind="termoMarca" @bind:event="oninput" />
+                        <button type="button" class="btn btn-outline-secondary text-nowrap"
+                                @onclick="() => { cadastroMarcaAberto = !cadastroMarcaAberto; erroNovaMarca = null; }">
+                            + Nova marca
+                        </button>
+                    </div>
+
+                    @if (cadastroMarcaAberto)
+                    {
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">Nova marca</div>
+                            <div class="card-body">
+                                @if (!string.IsNullOrEmpty(erroNovaMarca))
+                                {
+                                    <div class="alert alert-danger py-1">@erroNovaMarca</div>
+                                }
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-md-8">
+                                        <label class="form-label">Nome da marca</label>
+                                        <InputText @bind-Value="novaMarca.MarcaVeiculo" class="form-control form-control-sm" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="button" class="btn btn-primary btn-sm w-100" @onclick="SalvarNovaMarca">Salvar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <table class="table table-sm table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Cód.</th>
+                                <th>Marca</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!MarcasFiltradas.Any())
+                            {
+                                <tr><td colspan="3" class="text-center text-muted py-3">Nenhuma marca encontrada.</td></tr>
+                            }
+                            @foreach (var item in MarcasFiltradas)
+                            {
+                                <tr class="@(veiculoAtual.CodMarca == item.CodMarca ? "table-primary" : "")">
+                                    <td>@item.CodMarca</td>
+                                    <td>@item.MarcaVeiculo</td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-primary btn-sm" @onclick="() => SelecionarMarca(item)">
+                                            Selecionar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (modalTiposAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5); z-index:1060">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-truck-front me-2"></i>Tipos de veículo</h5>
+                    <button type="button" class="btn-close" @onclick="() => modalTiposAberto = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex gap-2 mb-3">
+                        <input class="form-control" placeholder="Buscar por código ou descrição"
+                               @bind="termoTipo" @bind:event="oninput" />
+                        <button type="button" class="btn btn-outline-secondary text-nowrap"
+                                @onclick="() => { cadastroTipoAberto = !cadastroTipoAberto; erroNovoTipo = null; }">
+                            + Novo tipo
+                        </button>
+                    </div>
+
+                    @if (cadastroTipoAberto)
+                    {
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">Novo tipo</div>
+                            <div class="card-body">
+                                @if (!string.IsNullOrEmpty(erroNovoTipo))
+                                {
+                                    <div class="alert alert-danger py-1">@erroNovoTipo</div>
+                                }
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-md-8">
+                                        <label class="form-label">Descrição do tipo</label>
+                                        <InputText @bind-Value="novoTipo.Tipo" class="form-control form-control-sm" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="button" class="btn btn-primary btn-sm w-100" @onclick="SalvarNovoTipo">Salvar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <table class="table table-sm table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Cód.</th>
+                                <th>Tipo</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!TiposFiltrados.Any())
+                            {
+                                <tr><td colspan="3" class="text-center text-muted py-3">Nenhum tipo encontrado.</td></tr>
+                            }
+                            @foreach (var item in TiposFiltrados)
+                            {
+                                <tr class="@(veiculoAtual.CodTipo == item.CodTipo ? "table-primary" : "")">
+                                    <td>@item.CodTipo</td>
+                                    <td>@item.Tipo</td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-primary btn-sm" @onclick="() => SelecionarTipo(item)">
+                                            Selecionar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -306,8 +382,12 @@
     private Veiculos? veiculoExcluir;
     private bool modalFormAberto = false;
     private bool modalExcluirAberto = false;
-    private bool modalNovaMarcaAberto = false;
-    private bool modalNovoTipoAberto = false;
+    private bool modalMarcasAberto;
+    private bool cadastroMarcaAberto;
+    private string termoMarca = string.Empty;
+    private bool modalTiposAberto;
+    private bool cadastroTipoAberto;
+    private string termoTipo = string.Empty;
     private MarcasVeiculos novaMarca = new();
     private TiposVeiculos novoTipo = new();
     private string? mensagemErro;
@@ -315,6 +395,52 @@
     private string? mensagemErroModal;
     private string? erroNovaMarca;
     private string? erroNovoTipo;
+
+    private IEnumerable<MarcasVeiculos> MarcasFiltradas
+    {
+        get
+        {
+            var ativas = listaMarcas.Where(m => m.Ativo);
+            if (string.IsNullOrWhiteSpace(termoMarca)) return ativas;
+
+            var termo = termoMarca.Trim().ToUpper();
+            return ativas.Where(m =>
+                m.CodMarca.ToString() == termo ||
+                m.MarcaVeiculo.ToUpper().Contains(termo));
+        }
+    }
+
+    private IEnumerable<TiposVeiculos> TiposFiltrados
+    {
+        get
+        {
+            var ativos = listaTipos.Where(t => t.Ativo);
+            if (string.IsNullOrWhiteSpace(termoTipo)) return ativos;
+
+            var termo = termoTipo.Trim().ToUpper();
+            return ativos.Where(t =>
+                t.CodTipo.ToString() == termo ||
+                t.Tipo.ToUpper().Contains(termo));
+        }
+    }
+
+    private string MarcaSelecionadaTexto
+    {
+        get
+        {
+            var marca = listaMarcas.FirstOrDefault(m => m.CodMarca == veiculoAtual.CodMarca);
+            return marca == null ? "" : $"{marca.CodMarca} - {marca.MarcaVeiculo}";
+        }
+    }
+
+    private string TipoSelecionadoTexto
+    {
+        get
+        {
+            var tipo = listaTipos.FirstOrDefault(t => t.CodTipo == veiculoAtual.CodTipo);
+            return tipo == null ? "" : $"{tipo.CodTipo} - {tipo.Tipo}";
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -338,8 +464,8 @@
     {
         veiculoAtual = new Veiculos { Ano = DateTime.Now.Year };
         mensagemErroModal = null;
-        modalNovaMarcaAberto = false;
-        modalNovoTipoAberto = false;
+        modalMarcasAberto = false;
+        modalTiposAberto = false;
         modalFormAberto = true;
     }
 
@@ -362,8 +488,8 @@
             Ativo = v.Ativo
         };
         mensagemErroModal = null;
-        modalNovaMarcaAberto = false;
-        modalNovoTipoAberto = false;
+        modalMarcasAberto = false;
+        modalTiposAberto = false;
         modalFormAberto = true;
     }
 
@@ -372,8 +498,8 @@
         modalFormAberto = false;
         veiculoAtual = new Veiculos();
         mensagemErroModal = null;
-        modalNovaMarcaAberto = false;
-        modalNovoTipoAberto = false;
+        modalMarcasAberto = false;
+        modalTiposAberto = false;
     }
 
     private void AbrirModalExcluir(Veiculos v)
@@ -388,6 +514,34 @@
         veiculoExcluir = null;
     }
 
+    private void AbrirConsultaMarcas()
+    {
+        termoMarca = string.Empty;
+        cadastroMarcaAberto = false;
+        erroNovaMarca = null;
+        modalMarcasAberto = true;
+    }
+
+    private void SelecionarMarca(MarcasVeiculos marca)
+    {
+        veiculoAtual.CodMarca = marca.CodMarca;
+        modalMarcasAberto = false;
+    }
+
+    private void AbrirConsultaTipos()
+    {
+        termoTipo = string.Empty;
+        cadastroTipoAberto = false;
+        erroNovoTipo = null;
+        modalTiposAberto = true;
+    }
+
+    private void SelecionarTipo(TiposVeiculos tipo)
+    {
+        veiculoAtual.CodTipo = tipo.CodTipo;
+        modalTiposAberto = false;
+    }
+
     private async Task SalvarNovaMarca()
     {
         erroNovaMarca = null;
@@ -400,9 +554,10 @@
         {
             await marcasService.AddMarcaAsync(novaMarca);
             listaMarcas = await marcasService.GetMarcasAsync();
-            veiculoAtual.CodMarca = listaMarcas.First(m => m.MarcaVeiculo == novaMarca.MarcaVeiculo).CodMarca;
+            var criada = listaMarcas.FirstOrDefault(m => m.MarcaVeiculo == novaMarca.MarcaVeiculo);
             novaMarca = new MarcasVeiculos();
-            modalNovaMarcaAberto = false;
+            cadastroMarcaAberto = false;
+            if (criada != null) SelecionarMarca(criada);
         }
         catch (Exception ex)
         {
@@ -422,9 +577,10 @@
         {
             await tiposService.AddTipoAsync(novoTipo);
             listaTipos = await tiposService.GetTiposAsync();
-            veiculoAtual.CodTipo = listaTipos.First(t => t.Tipo == novoTipo.Tipo).CodTipo;
+            var criado = listaTipos.FirstOrDefault(t => t.Tipo == novoTipo.Tipo);
             novoTipo = new TiposVeiculos();
-            modalNovoTipoAberto = false;
+            cadastroTipoAberto = false;
+            if (criado != null) SelecionarTipo(criado);
         }
         catch (Exception ex)
         {

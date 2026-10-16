@@ -10,7 +10,7 @@
             public int CodPessoa { get; set; }
             [MaxLength(100)]
             public string Nome { get; set; }
-            [MaxLength(11)]
+            [MaxLength(14)]
             public string CPF { get; set; }
             public bool PessoaJuridica { get; set; } = false;
             [MaxLength(50)]

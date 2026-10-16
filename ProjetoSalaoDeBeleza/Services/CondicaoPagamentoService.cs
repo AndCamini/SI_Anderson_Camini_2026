@@ -103,6 +103,11 @@ namespace ProjetoSalaoDeBeleza.Services
 
             if (condicao == null) throw new Exception("Condição não encontrada.");
 
+            if (await _context.Compras.AnyAsync(c => c.CodCondicaoPagamento == id) ||
+                await _context.Clientes.AnyAsync(c => c.CodCondicaoPagamento == id) ||
+                await _context.Fornecedores.AnyAsync(f => f.CodCondicaoPagamento == id))
+                throw new Exception("Não é possível excluir uma condição usada em compras, clientes ou fornecedores. Desative o cadastro.");
+
             _context.CondicoesPagamentoParcelas.RemoveRange(condicao.Parcelas);
             _context.CondicoesPagamento.Remove(condicao);
             await _context.SaveChangesAsync();

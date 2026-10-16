@@ -75,14 +75,13 @@
                         <InputText @bind-Value="estadoAtual.UF" class="form-control" maxlength="2" style="max-width: 80px;" />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">País</label>
-                        <InputSelect @bind-Value="estadoAtual.CodPais" class="form-select">
-                            <option value="0">Selecione...</option>
-                            @foreach (var pais in listaPaises)
-                            {
-                                <option value="@pais.CodPais">@pais.Pais</option>
-                            }
-                        </InputSelect>
+<label class="form-label">País</label>
+                        <div class="input-group">
+                            <input class="form-control" readonly value="@PaisTexto(estadoAtual.CodPais)" placeholder="Selecionar país..." />
+                            <button type="button" class="btn btn-outline-secondary" @onclick="AbrirConsultaPaises">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 @if (estadoAtual.CodEstado != 0)
@@ -109,6 +108,94 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
                     <button type="button" class="btn btn-primary" @onclick="Salvar">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (modalPaisesAberto)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5); z-index:1060">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-flag me-2"></i>Países</h5>
+                    <button type="button" class="btn-close" @onclick="() => modalPaisesAberto = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex gap-2 mb-3">
+                        <input class="form-control" placeholder="Buscar por código, país ou sigla"
+                               @bind="termoPais" @bind:event="oninput" />
+                        <button type="button" class="btn btn-outline-secondary text-nowrap"
+                                @onclick="() => { cadastroPaisAberto = !cadastroPaisAberto; erroNovoPais = null; }">
+                            + Novo país
+                        </button>
+                    </div>
+
+                    @if (cadastroPaisAberto)
+                    {
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">Novo país</div>
+                            <div class="card-body">
+                                @if (!string.IsNullOrEmpty(erroNovoPais))
+                                {
+                                    <div class="alert alert-danger py-1">@erroNovoPais</div>
+                                }
+                                <div class="row g-2">
+                                    <div class="col-md-5">
+                                        <label class="form-label">País</label>
+                                        <InputText @bind-Value="novoPais.Pais" class="form-control form-control-sm" maxlength="25" />
+                                    </div>
+                                    <div class="col-4 col-md-2">
+                                        <label class="form-label">Sigla</label>
+                                        <InputText @bind-Value="novoPais.Sigla" class="form-control form-control-sm" maxlength="3" placeholder="BR" />
+                                    </div>
+                                    <div class="col-4 col-md-2">
+                                        <label class="form-label">DDI</label>
+                                        <InputText @bind-Value="novoPais.DDI" class="form-control form-control-sm" maxlength="5" placeholder="55" />
+                                    </div>
+                                    <div class="col-4 col-md-3">
+                                        <label class="form-label">Moeda</label>
+                                        <InputText @bind-Value="novoPais.Moeda" class="form-control form-control-sm" maxlength="25" placeholder="Real" />
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm mt-2" @onclick="SalvarNovoPais">Salvar</button>
+                            </div>
+                        </div>
+                    }
+
+                    <table class="table table-sm table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Cód.</th>
+                                <th>País</th>
+                                <th>Sigla</th>
+                                <th>DDI</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!PaisesFiltrados.Any())
+                            {
+                                <tr><td colspan="5" class="text-center text-muted py-3">Nenhum país encontrado.</td></tr>
+                            }
+                            @foreach (var p in PaisesFiltrados)
+                            {
+                                <tr class="@(estadoAtual.CodPais == p.CodPais ? "table-primary" : "")">
+                                    <td>@p.CodPais</td>
+                                    <td>@p.Pais</td>
+                                    <td>@p.Sigla</td>
+                                    <td>@p.DDI</td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-primary btn-sm" @onclick="() => SelecionarPais(p)">
+                                            Selecionar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -188,9 +275,69 @@
         modalAberto = true;
     }
 
+    private bool modalPaisesAberto;
+    private bool cadastroPaisAberto;
+    private string termoPais = string.Empty;
+    private Paises novoPais = new();
+    private string? erroNovoPais;
+
+    private IEnumerable<Paises> PaisesFiltrados
+    {
+        get
+        {
+            var ordenados = listaPaises.OrderBy(p => p.Pais);
+            if (string.IsNullOrWhiteSpace(termoPais)) return ordenados;
+
+            var termo = termoPais.Trim().ToUpper();
+            return ordenados.Where(p =>
+                p.CodPais.ToString() == termo ||
+                (p.Pais ?? "").ToUpper().Contains(termo) ||
+                (p.Sigla ?? "").ToUpper() == termo);
+        }
+    }
+
+    private string PaisTexto(int codPais)
+    {
+        var pais = listaPaises.FirstOrDefault(p => p.CodPais == codPais);
+        return pais == null ? "" : $"{pais.CodPais} - {pais.Pais}";
+    }
+
+    private void AbrirConsultaPaises()
+    {
+        termoPais = string.Empty;
+        cadastroPaisAberto = false;
+        erroNovoPais = null;
+        modalPaisesAberto = true;
+    }
+
+    private void SelecionarPais(Paises pais)
+    {
+        estadoAtual.CodPais = pais.CodPais;
+        modalPaisesAberto = false;
+    }
+
+    private async Task SalvarNovoPais()
+    {
+        erroNovoPais = null;
+        try
+        {
+            await paisesService.AddPaisAsync(novoPais);
+            listaPaises = await paisesService.GetPaisesAsync();
+            var criado = listaPaises.FirstOrDefault(p => p.CodPais == novoPais.CodPais);
+            novoPais = new Paises();
+            cadastroPaisAberto = false;
+            if (criado != null) SelecionarPais(criado);
+        }
+        catch (Exception ex)
+        {
+            erroNovoPais = ex.InnerException?.Message ?? ex.Message;
+        }
+    }
+
     private void FecharModal()
     {
         modalAberto = false;
+        modalPaisesAberto = false;
         estadoAtual = new Estados();
         mensagemErroModal = null;
     }

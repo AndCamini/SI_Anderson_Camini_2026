@@ -20,6 +20,8 @@ namespace ProjetoSalaoDeBeleza.Services
         {
             categoria.Categoria = categoria.Categoria?.ToUpper() ?? string.Empty;
 
+            Validacoes.ValidarObrigatorio(categoria.Categoria, "Nome da categoria é obrigatório.");
+
             var duplicada = await _context.Categorias
                 .AnyAsync(c => c.Categoria == categoria.Categoria);
             if (duplicada)
@@ -36,6 +38,8 @@ namespace ProjetoSalaoDeBeleza.Services
         public async Task UpdateCategoriaAsync(Categorias categoria)
         {
             categoria.Categoria = categoria.Categoria?.ToUpper() ?? string.Empty;
+
+            Validacoes.ValidarObrigatorio(categoria.Categoria, "Nome da categoria é obrigatório.");
 
             var duplicada = await _context.Categorias
                 .AnyAsync(c => c.Categoria == categoria.Categoria

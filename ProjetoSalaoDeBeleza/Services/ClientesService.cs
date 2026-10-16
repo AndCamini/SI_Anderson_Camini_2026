@@ -32,6 +32,8 @@ namespace ProjetoSalaoDeBeleza.Services
             cliente.Bairro = cliente.Bairro?.ToUpper();
             cliente.Complemento = cliente.Complemento?.ToUpper();
 
+            Validacoes.ValidarPessoa(cliente, false);
+
             if (!string.IsNullOrWhiteSpace(cliente.CPF) &&
                 await _context.Clientes.AnyAsync(c => c.CPF == cliente.CPF))
                 throw new Exception("Já existe um cliente com este CPF/CNPJ.");
@@ -56,6 +58,8 @@ namespace ProjetoSalaoDeBeleza.Services
             cliente.Logradouro = cliente.Logradouro?.ToUpper();
             cliente.Bairro = cliente.Bairro?.ToUpper();
             cliente.Complemento = cliente.Complemento?.ToUpper();
+
+            Validacoes.ValidarPessoa(cliente, false);
 
             if (!string.IsNullOrWhiteSpace(cliente.CPF) &&
                 await _context.Clientes.AnyAsync(c => c.CPF == cliente.CPF && c.CodPessoa != cliente.CodPessoa))
@@ -92,6 +96,9 @@ namespace ProjetoSalaoDeBeleza.Services
 
         public async Task DeleteClienteAsync(int id)
         {
+            if (await _context.Agendamentos.AnyAsync(a => a.CodCliente == id))
+                throw new Exception("Não é possível excluir um cliente que possui agendamentos. Desative o cadastro.");
+
             var cliente = await _context.Clientes.FindAsync(id);
             if (cliente == null) throw new Exception("Cliente não encontrado.");
 

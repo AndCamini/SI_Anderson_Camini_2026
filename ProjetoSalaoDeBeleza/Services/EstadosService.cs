@@ -24,6 +24,8 @@ namespace ProjetoSalaoDeBeleza.Services
             estado.Estado = estado.Estado?.ToUpper() ?? string.Empty;
             estado.UF = estado.UF?.ToUpper() ?? string.Empty;
 
+            Validar(estado);
+
             if (await _context.Estados.AnyAsync(e => e.Estado == estado.Estado))
                 throw new Exception("Já existe um estado com esse nome.");
 
@@ -42,6 +44,8 @@ namespace ProjetoSalaoDeBeleza.Services
         {
             estado.Estado = estado.Estado?.ToUpper() ?? string.Empty;
             estado.UF = estado.UF?.ToUpper() ?? string.Empty;
+
+            Validar(estado);
 
             if (await _context.Estados.AnyAsync(e => e.Estado == estado.Estado && e.CodEstado != estado.CodEstado))
                 throw new Exception("Já existe um estado com esse nome.");
@@ -63,11 +67,25 @@ namespace ProjetoSalaoDeBeleza.Services
 
         public async Task DeleteEstadoAsync(int id)
         {
+            if (await _context.Cidades.AnyAsync(c => c.CodEstado == id))
+                throw new Exception("Não é possível excluir um estado que possui cidades vinculadas.");
+
             var estado = await _context.Estados.FindAsync(id);
             if (estado == null) throw new Exception("Estado não encontrado.");
 
             _context.Estados.Remove(estado);
             await _context.SaveChangesAsync();
+        }
+
+        private static void Validar(Estados estado)
+        {
+            Validacoes.ValidarObrigatorio(estado.Estado, "Nome do estado é obrigatório.");
+
+            if (estado.UF.Length < 2 || estado.UF.Length > 3 || !estado.UF.All(char.IsLetter))
+                throw new Exception("UF deve ter 2 ou 3 letras.");
+
+            if (estado.CodPais == 0)
+                throw new Exception("Selecione um país.");
         }
     }
 }

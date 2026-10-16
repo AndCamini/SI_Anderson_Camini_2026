@@ -23,7 +23,7 @@ namespace ProjetoSalaoDeBeleza.Services
 
         public async Task AddVeiculoAsync(Veiculos veiculo)
         {
-            veiculo.Placa = veiculo.Placa?.ToUpper() ?? string.Empty;
+            veiculo.Placa = (veiculo.Placa ?? string.Empty).Replace("-", "").Replace(" ", "").ToUpper();
             veiculo.Modelo = veiculo.Modelo?.ToUpper() ?? string.Empty;
             veiculo.Cor = veiculo.Cor?.ToUpper();
 
@@ -46,7 +46,7 @@ namespace ProjetoSalaoDeBeleza.Services
 
         public async Task UpdateVeiculoAsync(Veiculos veiculo)
         {
-            veiculo.Placa = veiculo.Placa?.ToUpper() ?? string.Empty;
+            veiculo.Placa = (veiculo.Placa ?? string.Empty).Replace("-", "").Replace(" ", "").ToUpper();
             veiculo.Modelo = veiculo.Modelo?.ToUpper() ?? string.Empty;
             veiculo.Cor = veiculo.Cor?.ToUpper();
 
@@ -127,6 +127,7 @@ namespace ProjetoSalaoDeBeleza.Services
                     throw new Exception("Formato de placa inválido. Use o formato ABC1234 (3 letras e 4 números).");
             }
 
+            Validacoes.ValidarObrigatorio(veiculo.Modelo, "Modelo é obrigatório.");
             if (veiculo.CodMarca == 0) throw new Exception("Selecione uma marca.");
             if (veiculo.CodTipo == 0) throw new Exception("Selecione um tipo.");
             if (veiculo.CodTransportador == 0) throw new Exception("Selecione um transportador.");

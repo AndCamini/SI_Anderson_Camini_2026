@@ -26,6 +26,9 @@ namespace ProjetoSalaoDeBeleza.Data
         public DbSet<ProjetoSalaoDeBeleza.Models.Compras> Compras { get; set; }
         public DbSet<ProjetoSalaoDeBeleza.Models.ComprasItens> ComprasItens { get; set; }
         public DbSet<ProjetoSalaoDeBeleza.Models.ComprasParcelas> ComprasParcelas { get; set; }
+        public DbSet<ProjetoSalaoDeBeleza.Models.TiposServicos> TiposServicos { get; set; }
+        public DbSet<ProjetoSalaoDeBeleza.Models.Servicos> Servicos { get; set; }
+        public DbSet<ProjetoSalaoDeBeleza.Models.Agendamentos> Agendamentos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -122,7 +125,7 @@ namespace ProjetoSalaoDeBeleza.Data
                 .HasOne(i => i.oCompra)
                 .WithMany(c => c.Itens)
                 .HasForeignKey(i => new { i.Modelo, i.Serie, i.NumeroNota, i.CodFornecedor })
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<ComprasItens>()
                 .HasOne(i => i.oProduto)
@@ -134,7 +137,57 @@ namespace ProjetoSalaoDeBeleza.Data
                 .HasOne(p => p.oCompra)
                 .WithMany(c => c.Parcelas)
                 .HasForeignKey(p => new { p.Modelo, p.Serie, p.NumeroNota, p.CodFornecedor })
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Servicos>()
+                .HasOne(s => s.oTipoServico)
+                .WithMany()
+                .HasForeignKey(s => s.CodTipoServico)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Agendamentos>()
+                .HasOne(a => a.oCliente)
+                .WithMany()
+                .HasForeignKey(a => a.CodCliente)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Agendamentos>()
+                .HasOne(a => a.oFuncionario)
+                .WithMany()
+                .HasForeignKey(a => a.CodFuncionario)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Agendamentos>()
+                .HasOne(a => a.oServico)
+                .WithMany()
+                .HasForeignKey(a => a.CodServico)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Agendamentos>()
+                .Property(a => a.Status)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Agendamentos>()
+                .HasIndex(a => new { a.CodFuncionario, a.DataHoraInicio });
+
+            modelBuilder.Entity<Estados>()
+                .HasOne(e => e.oPais)
+                .WithMany()
+                .HasForeignKey(e => e.CodPais)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Cidades>()
+                .HasOne(c => c.oEstado)
+                .WithMany()
+                .HasForeignKey(c => c.CodEstado)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            var relacionamentosDoSistema = modelBuilder.Model.GetEntityTypes()
+                .Where(e => e.ClrType.Namespace == typeof(Paises).Namespace)
+                .SelectMany(e => e.GetForeignKeys());
+
+            foreach (var relacionamento in relacionamentosDoSistema)
+                relacionamento.DeleteBehavior = DeleteBehavior.Restrict;
         }
     }
 }

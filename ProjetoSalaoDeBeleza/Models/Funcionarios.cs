@@ -15,7 +15,7 @@ namespace ProjetoSalaoDeBeleza.Models
 
         public DateTime? DataDemissao { get; set; }
 
-        [Column(TypeName = "decimal(5,4)")]
+        [Column(TypeName = "decimal(5,2)")]
         public decimal ComissaoPercentual { get; set; } = 0;
 
     }

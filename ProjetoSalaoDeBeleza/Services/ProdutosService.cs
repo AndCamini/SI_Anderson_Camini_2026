@@ -31,6 +31,10 @@ namespace ProjetoSalaoDeBeleza.Services
                 .AnyAsync(p => p.Produto == produto.Produto);
             if (duplicado) throw new Exception("Já existe um produto com esse nome.");
 
+            if (produto.CodigoBarras != null &&
+                await _context.Produtos.AnyAsync(p => p.CodigoBarras == produto.CodigoBarras && p.CodProduto != produto.CodProduto))
+                throw new Exception("Já existe um produto com esse código de barras.");
+
             produto.oCategoria = null;
             produto.DataCadastro = DateTime.UtcNow;
             produto.DataUltimaAlteracao = DateTime.UtcNow;
@@ -52,6 +56,10 @@ namespace ProjetoSalaoDeBeleza.Services
                 .AnyAsync(p => p.Produto == produto.Produto && p.CodProduto != produto.CodProduto);
             if (duplicado) throw new Exception("Já existe um produto com esse nome.");
 
+            if (produto.CodigoBarras != null &&
+                await _context.Produtos.AnyAsync(p => p.CodigoBarras == produto.CodigoBarras && p.CodProduto != produto.CodProduto))
+                throw new Exception("Já existe um produto com esse código de barras.");
+
             var existente = await _context.Produtos.FindAsync(produto.CodProduto);
             if (existente == null) throw new Exception("Produto não encontrado.");
 
@@ -69,6 +77,9 @@ namespace ProjetoSalaoDeBeleza.Services
 
         public async Task DeleteProdutoAsync(int id)
         {
+            if (await _context.ComprasItens.AnyAsync(i => i.CodProduto == id))
+                throw new Exception("Não é possível excluir um produto que aparece em compras. Desative o cadastro.");
+
             var produto = await _context.Produtos.FindAsync(id);
             if (produto == null) throw new Exception("Produto não encontrado.");
 
@@ -78,6 +89,23 @@ namespace ProjetoSalaoDeBeleza.Services
 
         private void Validar(Produtos produto)
         {
+            Validacoes.ValidarObrigatorio(produto.Produto, "Nome é obrigatório.");
+            Validacoes.ValidarObrigatorio(produto.UnidadeMedida, "Unidade de medida é obrigatória.");
+
+            if (produto.PrecoVenda <= 0)
+                throw new Exception("Preço de venda deve ser maior que zero.");
+
+            if (produto.PrecoCusto < 0)
+                throw new Exception("Preço de custo não pode ser negativo.");
+
+            if (produto.Estoque < 0)
+                throw new Exception("Estoque não pode ser negativo.");
+
+            produto.Referencia = Validacoes.Limpar(produto.Referencia)?.ToUpper();
+            produto.CodigoBarras = Validacoes.Limpar(produto.CodigoBarras);
+            if (produto.CodigoBarras != null && !Validacoes.CodigoBarrasValido(produto.CodigoBarras))
+                throw new Exception("Código de barras inválido. Informe um EAN/GTIN de 8, 12, 13 ou 14 dígitos.");
+
             if (produto.PrecoVenda < produto.PrecoCusto)
                 throw new Exception("Preço de venda não pode ser menor que o preço de custo.");
 

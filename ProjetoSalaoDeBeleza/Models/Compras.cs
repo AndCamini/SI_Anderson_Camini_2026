@@ -5,32 +5,29 @@ namespace ProjetoSalaoDeBeleza.Models
 {
     public class Compras
     {
-
-        [Required]
         public int Modelo { get; set; } = 55;
-
-        [Required]
         public int Serie { get; set; } = 1;
 
+        [Range(1, 999999999, ErrorMessage = "Número da nota deve ter no máximo 9 dígitos.")]
         public int NumeroNota { get; set; }
 
-        [Required]
         public int CodFornecedor { get; set; }
         public Fornecedores? oFornecedor { get; set; }
-
-        public int? CodTransportador { get; set; }
-        public Transportadores? oTransportador { get; set; }
 
         public DateTime DataEmissao { get; set; } = DateTime.Today;
         public DateTime DataChegada { get; set; } = DateTime.Today;
 
-        [Column(TypeName = "decimal(10,2)")]
+        // Transporte
+        public int? CodTransportador { get; set; }
+        public Transportadores? oTransportador { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
         public decimal Frete { get; set; } = 0;
 
-        [Column(TypeName = "decimal(10,2)")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal Seguro { get; set; } = 0;
 
-        [Column(TypeName = "decimal(10,2)")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal OutrasDespesas { get; set; } = 0;
 
         public int? CodCondicaoPagamento { get; set; }
@@ -39,7 +36,7 @@ namespace ProjetoSalaoDeBeleza.Models
         public int? CodFormaPagamento { get; set; }
         public FormasPagamento? oFormaPagamento { get; set; }
 
-        [MaxLength(250)]
+        [MaxLength(500)]
         public string? Observacoes { get; set; }
 
         public DateTime DataCadastro { get; set; } = DateTime.UtcNow;
